@@ -1,7 +1,7 @@
 import torch
 import time
 
-matrix_size = 1024
+matrix_size = 1024*64
 def matmul_on_all_gpus(duration_sec=180, rest_duration_sec=180):
     # Find all available GPU devices
     device_count = torch.cuda.device_count()
