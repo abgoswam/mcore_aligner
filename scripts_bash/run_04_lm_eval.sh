@@ -4,7 +4,11 @@ set -x #This command turns on debugging by making the shell print each command b
 set -e #This command tells the shell to exit immediately if any command it runs exits with a non-zero status (which usually indicates an error)
 set -u
 
-model_path="/mnt/syntheticpipelinetrainerv1/mcore_posttrain_v1/ckpts_produced/mistral_ckpts/Mistral-7B-v0.1-to-HF1"
+if [ -z "$JOB_PATH" ]; then
+  JOB_PATH=/mnt/syntheticpipelinetrainerv1/mcore_posttrain_v1/ckpts_produced/mistral_ckpts
+fi
+
+model_path=${JOB_PATH}/Mistral-7B-v0.1-to-HF1
 
 output_path=.
 
