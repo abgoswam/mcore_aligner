@@ -18,7 +18,7 @@ import sys
 path_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))
 sys.path.append(os.path.join(path_dir, "examples"))
 from mistral.pretrain_mcore_mistral import model_provider
-# from megatron_patch.arguments import get_patch_args
+from megatron_patch.arguments import get_patch_args
 
 torch.backends.cudnn.deterministic = True
 torch.backends.cudnn.benchmark = False

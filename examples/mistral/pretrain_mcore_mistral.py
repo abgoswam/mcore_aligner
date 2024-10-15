@@ -22,7 +22,7 @@ from megatron.training import get_args
 from megatron.training import get_timers
 from megatron.core import mpu, tensor_parallel
 from megatron.core.enums import ModelType
-# import megatron.model
+import megatron.legacy.model
 from megatron.training.utils import (
     get_batch_on_this_tp_rank,
     get_batch_on_this_cp_rank,
@@ -42,7 +42,7 @@ from megatron_patch.model.mixtral.model import GPTModel
 from megatron_patch.model.mixtral.layer_specs import get_gpt_layer_with_transformer_engine_spec
 
 
-def model_provider(pre_process=True, post_process=True) -> Union[GPTModel, megatron.model.GPTModel]:
+def model_provider(pre_process=True, post_process=True) -> Union[GPTModel,  megatron.legacy.model.GPTModel]:
     args = get_args()
     build_tokenizer(args)
     config = core_transformer_config_from_args(get_args())
