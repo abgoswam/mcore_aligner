@@ -281,6 +281,7 @@ def load_megatron_model(args, model):
     else:
         raise ValueError('not support yet')
 
+    # https://github.com/alibaba/Pai-Megatron-Patch/issues/363
     model.load_state_dict(state_dict, strict=False)
     return model
 
