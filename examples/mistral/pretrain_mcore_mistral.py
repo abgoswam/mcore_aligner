@@ -1,3 +1,10 @@
+import debugpy
+debugpy.listen(5678)  # 5678 is port
+print("Waiting for debugger attach")
+debugpy.wait_for_client()
+debugpy.breakpoint()
+print('break on this line')
+
 # Copyright (c) 2023 Alibaba PAI and Nvidia Megatron-LM Team.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
