@@ -2,6 +2,11 @@
 
 ### Model Conversions.
 
+- HF Mistral -> mcore (Works)
+- mcore -> HF Mistral (works)
+- lm_eval (MMLU) on converted model: 0.6
+
+ 
 ```bash
 amlt run ./submit_amlt_mcore_conversions.yaml
 ```
