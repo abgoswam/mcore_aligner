@@ -2,7 +2,7 @@ import torch
 import sys
 
 # Replace with the path to your Megatron-LM checkpoint
-checkpoint_path = '/mnt/syntheticpipelinetrainerv1/mcore_posttrain_v1/ckpts_produced/mistral_ckpts/Mistral-7B-v0.1-to-mcore-tp1-pp1/release/mp_rank_00/model_optim_rng.pt'
+checkpoint_path = '/mnt/syntheticpipelinetrainerv1/mcore_posttrain_v1/ckpts_produced/Mistral-7B-v0.1-to-mcore-tp1-pp1/release/mp_rank_00/model_optim_rng.pt'
 
 # Load the checkpoint
 checkpoint = torch.load(checkpoint_path, map_location=torch.device('cpu'))

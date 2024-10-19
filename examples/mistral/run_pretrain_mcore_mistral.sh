@@ -167,7 +167,6 @@ SAVED_PRETRAIN_CHECKPOINT_PATH="${OUTPUT_BASEPATH}/checkpoint/${NAME}"
 
 megatron_options="  \
         --save ${SAVED_PRETRAIN_CHECKPOINT_PATH} \
-        --train-data-path ${DATASET_PATH} \
         --data-path ${DATASET_PATH} \
         --lr ${LR} \
         --min-lr ${MIN_LR} \

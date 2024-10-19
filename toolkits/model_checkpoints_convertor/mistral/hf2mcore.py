@@ -282,7 +282,7 @@ def load_megatron_model(args, model):
         raise ValueError('not support yet')
 
     # https://github.com/alibaba/Pai-Megatron-Patch/issues/363
-    model.load_state_dict(state_dict, strict=False)
+    model.load_state_dict(state_dict)
     return model
 
 
@@ -381,9 +381,12 @@ def save_mgmodel(args, mgmodel, load_path, save_path):
     head_dim = args.hidden_size // args.num_attention_heads
     group_per_split = args.num_query_groups // args.target_tensor_model_parallel_size
     full_model = mgmodel.state_dict_for_save_checkpoint()
+
+    # https://github.com/alibaba/Pai-Megatron-Patch/issues/363
     for k in list(full_model.keys()):
-        if full_model[k] is None or "_extra_state" in k:
+        if full_model[k] is None:
             full_model.pop(k)
+            
     pattern = r'local_experts\.(\d+)\.'
     num_local_experts = args.num_experts // args.target_expert_model_parallel_size if args.num_experts else 0
     if (

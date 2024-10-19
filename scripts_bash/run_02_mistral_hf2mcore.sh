@@ -1,5 +1,5 @@
 if [ -z "$JOB_PATH" ]; then
-  JOB_PATH=/mnt/syntheticpipelinetrainerv1/mcore_posttrain_v1/ckpts_produced/mistral_ckpts
+  JOB_PATH=/mnt/syntheticpipelinetrainerv1/mcore_posttrain_v1/ckpts_produced
 fi
 
 cd ./toolkits/model_checkpoints_convertor/mistral &&

@@ -1,6 +1,6 @@
 #!/bin/bash
 if [ -z "$JOB_PATH" ]; then
-  JOB_PATH=/mnt/syntheticpipelinetrainerv1/mcore_posttrain_v1/ckpts_produced/mistral_ckpts
+  JOB_PATH=/mnt/syntheticpipelinetrainerv1/mcore_posttrain_v1/ckpts_produced
   MCORE_ALIGNER_PATH=/home/aiscuser/mcore_aligner
 else
   # this is amulet. so JOB_PATH will be set, and code has been uploaded. 
@@ -35,7 +35,7 @@ sh run_pretrain_mcore_mistral.sh  \
     false \
     500  \
     /mnt/syntheticpipelinetrainerv1/mcore_posttrain_v1/datasets_test/mistral-datasets/wudao_mistralbpe_content_document \
-    /mnt/syntheticpipelinetrainerv1/mcore_posttrain_v1/ckpts_produced/mistral_ckpts/Mistral-7B-v0.1-to-mcore-tp1-pp1   \
+    /mnt/syntheticpipelinetrainerv1/mcore_posttrain_v1/ckpts_produced/Mistral-7B-v0.1-to-mcore-tp1-pp1   \
     100000000   \
     10000   \
     ${JOB_PATH}/output_mcore_mistral_cpt2
