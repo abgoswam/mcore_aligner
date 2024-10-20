@@ -1,3 +1,6 @@
 [submodule "Megatron-LM-10152024"]
 	path = Megatron-LM-10152024
 	url = https://github.com/NVIDIA/Megatron-LM.git
+[submodule "AMA-Megatron-LM-10152024"]
+	path = AMA-Megatron-LM-10152024
+	url = https://github.com/abgoswam/Megatron-LM.git
