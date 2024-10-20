@@ -1,8 +1,10 @@
 #!/bin/bash
+#sh run_pretrain_megatron_mixtral.sh dsw ../.. 0.125B 1 8 1e-5 1e-6 80 80 0 bf16 2 1 sel true true true true 100  /mnt/llama2-datasets/alpaca_data.json /mnt/mixtral-ckpts/Mixtral-8x7B-v0.1 10000000000 100000000 /mnt/test_mixtral_output
+
 set -e
 ENV=$1
 MEGATRON_PATCH_PATH=$2
-MEGATRON_PATH=${MEGATRON_PATCH_PATH}/Megatron-LM-10152024
+MEGATRON_PATH=${MEGATRON_PATCH_PATH}/AMA-Megatron-LM-10152024
 export PYTHONPATH=${MEGATRON_PATH}:${MEGATRON_PATCH_PATH}:$PYTHONPATH
 export CUDA_DEVICE_MAX_CONNECTIONS=1
 if [ $ENV = dsw ]; then
@@ -44,10 +46,11 @@ TE=${18}
 MOE=${19}
 SAVE_INTERVAL=${20}
 DATASET_PATH=${21}
-PRETRAIN_CHECKPOINT_PATH=${22}
-TRAIN_TOKENS=${23}
-WARMUP_TOKENS=${24}
-OUTPUT_BASEPATH=${25}
+VALID_DATASET_PATH=${22}
+PRETRAIN_CHECKPOINT_PATH=${23}
+TRAIN_ITERS=${24}
+LR_WARMUP_ITERS=${25}
+OUTPUT_BASEPATH=${26}
 
 if [ $MODEL_SIZE = 7B ]; then
 
@@ -151,11 +154,9 @@ fi
 # (agoswami) Unused.
 EP=$(($TOTAL_GPUS/$TP/$PP))
 
-TRAIN_ITERS=$(( ${TRAIN_TOKENS} / ${GLOBAL_BATCH_SIZE} / ${SEQ_LEN} ))
-LR_WARMUP_ITERS=$(( ${WARMUP_TOKENS}  / ${GLOBAL_BATCH_SIZE} / ${SEQ_LEN} ))
-LR_DECAY_ITERS=$(( ${TRAIN_TOKENS} /  ${GLOBAL_BATCH_SIZE} / ${SEQ_LEN} ))
+LR_DECAY_ITERS=$(( ${TRAIN_ITERS} - ${LR_WARMUP_ITERS}))
 
-NAME="${ENV}-pretrain-megatron-gpt3-${MODEL_SIZE}-lr-${LR}-bs-${BATCH_SIZE}-seqlen-${SEQ_LEN}-pr-${PR}-tp-${TP}-pp-${PP}-ac-${AC}-do-${DO}-sp-${SP}-tt-${TRAIN_TOKENS}-wt-${WARMUP_TOKENS}"
+NAME="${ENV}-finetune-megatron-gpt3-${MODEL_SIZE}-lr-${LR}-bs-${BATCH_SIZE}-seqlen-${SEQ_LEN}-pr-${PR}-tp-${TP}-pp-${PP}-ac-${AC}-do-${DO}-sp-${SP}-ti-${TRAIN_ITERS}-wi-${LR_WARMUP_ITERS}"
 mkdir -p "${OUTPUT_BASEPATH}/tensorboard/"
 mkdir -p "${OUTPUT_BASEPATH}/checkpoint/"
 mkdir -p "${OUTPUT_BASEPATH}/log/"
@@ -168,7 +169,7 @@ SAVED_PRETRAIN_CHECKPOINT_PATH="${OUTPUT_BASEPATH}/checkpoint/${NAME}"
 megatron_options="  \
         --save ${SAVED_PRETRAIN_CHECKPOINT_PATH} \
         --train-data-path ${DATASET_PATH} \
-        --data-path ${DATASET_PATH} \
+        --valid-data-path ${VALID_DATASET_PATH} \
         --lr ${LR} \
         --min-lr ${MIN_LR} \
         --lr-decay-style cosine \
@@ -190,7 +191,6 @@ megatron_options="  \
         --seq-length ${SEQ_LEN} \
         --max-position-embeddings ${MAX_POSITION_EMBEDDINGS} \
         --max-padding-length ${PAD_LEN} \
-        --sliding-window ${SLW} \
         --log-interval 1 \
         --eval-interval 10000 \
         --eval-iters 10 \
@@ -207,7 +207,7 @@ megatron_options="  \
         --seed 1234 \
         --extra-vocab-size ${EXTRA_VOCAB_SIZE} \
         --patch-tokenizer-type MistralTokenizer \
-        --dataset LLama-Pretrain-Idxmap \
+        --dataset LLama-Pretrain-Raw \
         --swiglu \
         --use-rotary-position-embeddings \
         --position-embedding-type rope \
@@ -221,7 +221,11 @@ megatron_options="  \
         --use-mcore-models \
         --no-rope-fusion \
         --distributed-timeout-minutes 6000 \
-        --transformer-impl transformer_engine"
+        --transformer-impl transformer_engine \
+        --eod-mask-loss"
+
+# run_cmd="python pretrain_mcore_mistral.py
+#  ${megatron_options} ${pr_options} ${load_options} ${te_options} ${activation_checkpoint_options} ${do_options} ${flash_options} ${sp_options} ${gqa_options} ${moe_options}"
 
 run_cmd="torchrun $DISTRIBUTED_ARGS pretrain_mcore_mistral.py
  ${megatron_options} ${pr_options} ${load_options} ${te_options} ${activation_checkpoint_options} ${do_options} ${flash_options} ${sp_options} ${gqa_options} ${moe_options}"

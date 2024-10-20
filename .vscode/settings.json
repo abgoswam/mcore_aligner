@@ -1,6 +1,7 @@
 {
     "python.analysis.extraPaths": [
         "./Megatron-LM-10152024",
-        "./examples"
+        "./examples",
+        "./AMA-Megatron-LM-10152024"
     ],
 }

@@ -25,7 +25,6 @@ from torch import Tensor
 from functools import partial
 from typing import Union
 
-from megatron.core.datasets.utils import get_blend_from_list
 from megatron.training import get_args
 from megatron.training import get_timers
 from megatron.core import mpu, tensor_parallel
@@ -34,12 +33,11 @@ import megatron.legacy.model
 from megatron.training.utils import (
     get_batch_on_this_tp_rank,
     get_batch_on_this_cp_rank,
-    average_losses_across_data_parallel_group,
-    print_rank_0
+    average_losses_across_data_parallel_group
 )
 from megatron.core.datasets.blended_megatron_dataset_builder import BlendedMegatronDatasetBuilder
 from megatron.training import pretrain
-from megatron.core.datasets.gpt_dataset import GPTDatasetConfig, MockGPTDataset
+from megatron.core.datasets.gpt_dataset import GPTDatasetConfig
 from megatron.core.datasets.gpt_dataset import GPTDataset
 from megatron.training.arguments import core_transformer_config_from_args
 
@@ -149,38 +147,14 @@ def forward_step(data_iterator, model):
 def is_dataset_built_on_rank():
     return (mpu.is_pipeline_first_stage() or mpu.is_pipeline_last_stage()) and mpu.get_tensor_model_parallel_rank() == 0
 
-# def core_gpt_dataset_config_from_args(args):
-#     return GPTDatasetConfig(
-#         random_seed=args.seed,
-#         sequence_length=args.seq_length,
-#         blend=args.data_path,
-#         split=args.split,
-#         path_to_cache=args.data_cache_path,
-#     )
-
 def core_gpt_dataset_config_from_args(args):
-    tokenizer = get_tokenizer()
-
     return GPTDatasetConfig(
+        is_built_on_rank=is_dataset_built_on_rank,
         random_seed=args.seed,
         sequence_length=args.seq_length,
-        blend=get_blend_from_list(args.data_path),
-        blend_per_split=[
-            get_blend_from_list(args.train_data_path),
-            get_blend_from_list(args.valid_data_path),
-            get_blend_from_list(args.test_data_path)
-        ],
-        renormalize_blend_weights=args.renormalize_blend_weights,
+        blend=args.data_path,
         split=args.split,
-        num_dataset_builder_threads=args.num_dataset_builder_threads,
         path_to_cache=args.data_cache_path,
-        mmap_bin_files=args.mmap_bin_files,
-        tokenizer=tokenizer,
-        reset_position_ids=args.reset_position_ids,
-        reset_attention_mask=args.reset_attention_mask,
-        eod_mask_loss=args.eod_mask_loss,
-        create_attention_mask=args.create_attention_mask_in_dataloader,
-        s3_cache_path = args.s3_cache_path
     )
 
 def train_valid_test_datasets_provider(train_val_test_num_samples):
@@ -190,12 +164,10 @@ def train_valid_test_datasets_provider(train_val_test_num_samples):
                 train_ds, valid_ds, test_ds = \
                                     build_pretrain_dataset_from_original(args.dataset)
     else:
-        config = core_gpt_dataset_config_from_args(args)
         train_ds, valid_ds, test_ds = BlendedMegatronDatasetBuilder(
             GPTDataset,
             train_val_test_num_samples,
-            is_dataset_built_on_rank,
-            config
+            core_gpt_dataset_config_from_args(args)
         ).build()
 
     return train_ds, valid_ds, test_ds
