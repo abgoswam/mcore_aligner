@@ -11,18 +11,29 @@
 amlt run ./submit_amlt_mcore_conversions.yaml
 ```
 
-### SFT
+### SFT.
 
 In Progress.
 
-### Inference (Batch)
+### Inference.
+
+#### Batch
 
 - Supports single-gpu / multi-gpu.
 
 ```bash
-bash ./scripts_bash/run_07_inference_batch.sh
+bash ./scripts_bash/run_07_a_inference_batch.sh
 ```
 
+#### Text Gen Server
+
+```bash
+bash ./scripts_bash/run_07_b_inference_text_gen_server.sh
+```
+
+```bash
+bash tools/text_generation_cli.py localhost:5000
+```
 
 # Acknowledgements
 This work is built on top of the following papers/repositories:
