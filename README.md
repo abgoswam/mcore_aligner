@@ -15,6 +15,14 @@ amlt run ./submit_amlt_mcore_conversions.yaml
 
 In Progress.
 
+### Inference (Batch)
+
+- Supports single-gpu / multi-gpu.
+
+```bash
+bash ./scripts_bash/run_07_inference_batch.sh
+```
+
 
 # Acknowledgements
 This work is built on top of the following papers/repositories:
