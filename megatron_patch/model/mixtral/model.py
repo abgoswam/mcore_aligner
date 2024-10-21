@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Literal, Optional
+from typing import Dict, Literal, Optional
 from torch import Tensor
 
 from megatron.core import InferenceParams, parallel_state, tensor_parallel
@@ -215,73 +215,27 @@ class GPTModel(LanguageModule):
 
         return loss
 
-    def sharded_state_dict(self, prefix: str = '', sharded_offsets: tuple = ()) -> ShardedStateDict:
-        """
-        Returns a sharded state dictionary for distributed training, where model parameters
-        are partitioned across different devices or processes.
+    def sharded_state_dict(
+        self, prefix: str = '', sharded_offsets: tuple = (), metadata: Optional[Dict] = None
+    ) -> ShardedStateDict:
+        """ Sharded state dict implementation for GPTModel backward-compatibility (removing extra state).
 
         Args:
-            prefix (str, optional): A prefix to prepend to each key in the state dictionary.
-                                    This can be used to distinguish parameters of different
-                                    model components when combining state dictionaries.
-            sharded_offsets (tuple, optional): Offsets for sharding the state dictionary. It
-                                                typically contains the start index for each shard
-                                                and the overall size of the model parameter. It
-                                                should be empty for this model as offsets are not
-                                                expected.
+            prefix (str): Module name prefix.
+            sharded_offsets (tuple): PP related offsets, expected to be empty at this module level.
+            metadata (Optional[Dict]): metadata controlling sharded state dict creation.
 
         Returns:
-            ShardedStateDict: A dictionary containing model parameters with keys prepended by `prefix`.
-                              The parameters are sharded according to the tensor parallelism configuration.
+            ShardedStateDict: sharded state dict for the GPTModel
         """
-        assert not sharded_offsets, "Unexpected sharded offsets"
-        sharded_state_dict = {}
+        sharded_state_dict = super().sharded_state_dict(prefix, sharded_offsets, metadata)
+        output_layer_extra_state_key = f'{prefix}output_layer._extra_state'
 
-        if self.pre_process:
-            embedding_prefix = f'{prefix}embedding.'
-            embedding_sharded_state_dict = self.embedding.sharded_state_dict(
-                prefix=embedding_prefix
-            )
-            sharded_state_dict.update(embedding_sharded_state_dict)
-
-        decoder_prefix = f'{prefix}decoder.'
-        decoder_sharded_state_dict = self.decoder.sharded_state_dict(prefix=decoder_prefix)
-        sharded_state_dict.update(decoder_sharded_state_dict)
-
-        if self.post_process:
-            output_layer_prefix = f'{prefix}output_layer.'
-            output_layer_key = f'{output_layer_prefix}weight'
-            if self.share_embeddings_and_output_weights:
-                if not self.pre_process:
-                    # when sharing embeddings with last stage, we need to use the weights from the first stage
-                    # on pipeline first rank, word embeddings are saved to {prefix}embedding.word_embeddings.weight
-                    tensor = self.shared_embedding_or_output_weight()
-                    first_stage_word_emb_key = f'{prefix}embedding.word_embeddings.weight'
-                    last_stage_word_emb_replica_id = (
-                        1,  # copy of first stage embedding
-                        0,
-                        parallel_state.get_data_parallel_rank(with_context_parallel=True),
-                    )
-
-                    sharded_output_layer_tensor = make_tp_sharded_tensor_for_checkpoint(
-                        tensor=tensor,
-                        key=first_stage_word_emb_key,
-                        replica_id=last_stage_word_emb_replica_id,
-                        allow_shape_mismatch=True,
-                    )
-
-                    sharded_state_dict[output_layer_key] = sharded_output_layer_tensor
-
-            else:
-                output_layer_state_dict = self.output_layer.state_dict(
-                    prefix=output_layer_prefix, keep_vars=True
-                )
-                output_layer_tensor = output_layer_state_dict[output_layer_key]
-                # independent output layer
-                sharded_output_layer_tensor = make_tp_sharded_tensor_for_checkpoint(
-                    tensor=output_layer_tensor, key=output_layer_key, allow_shape_mismatch=True,
-                )
-
-                sharded_state_dict[output_layer_key] = sharded_output_layer_tensor
+        # Old GPT checkpoints only stored the output layer weight key. So we remove the _extra_state key
+        # but check that it doesn't contain any data anyway
+        output_extra_state = sharded_state_dict.pop(output_layer_extra_state_key, None)
+        assert not (
+            output_extra_state and output_extra_state.data
+        ), f'Expected output layer extra state to be empty, got: {output_extra_state}'
 
         return sharded_state_dict
