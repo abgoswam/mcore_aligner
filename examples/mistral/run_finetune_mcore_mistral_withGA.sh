@@ -222,6 +222,7 @@ megatron_options="  \
         --no-rope-fusion \
         --distributed-timeout-minutes 6000 \
         --transformer-impl transformer_engine \
+        --ckpt-format torch \
         --eod-mask-loss"
 
 # run_cmd="python pretrain_mcore_mistral.py

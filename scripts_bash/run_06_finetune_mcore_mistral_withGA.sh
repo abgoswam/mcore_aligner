@@ -39,7 +39,7 @@ sh run_finetune_mcore_mistral_withGA.sh  \
     /mnt/syntheticpipelinetrainerv1/mcore_posttrain_v1/ckpts_produced/Mistral-7B-v0.1-to-mcore-tp1-pp1   \
     100   \
     10   \
-    ${JOB_PATH}/output_mcore_mistral_sft3
+    ${JOB_PATH}/output_mcore_mistral_sft5
 
 
 # ENV=$1                          # Running environment: dlc, dsw
