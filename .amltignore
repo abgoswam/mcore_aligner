@@ -1,5 +1,11 @@
+mnt
 Megatron-LM-10152024/images/weak_scaling.png
 Megatron-LM-10152024/images/strong_scaling.png
 Megatron-LM-10152024/examples/multimodal/assets/pretrain_curves.png
 Megatron-LM-10152024/docs/source/images/moe/token_drop.png
 Megatron-LM-10152024/images/model_table.png
+AMA-Megatron-LM-10152024/images/weak_scaling.png
+AMA-Megatron-LM-10152024/images/strong_scaling.png
+AMA-Megatron-LM-10152024/examples/multimodal/assets/pretrain_curves.png
+AMA-Megatron-LM-10152024/docs/source/images/moe/token_drop.png
+AMA-Megatron-LM-10152024/images/model_table.png
