@@ -58,7 +58,7 @@ NUM_LAYERS=32
 HIDDEN_SIZE=4096
 NUM_ATTN_HEADS=32
 INTERMEDIATE_SIZE=14336
-MAX_POSITION_EMBEDDINGS=32768
+MAX_POSITION_EMBEDDINGS=8192
 SLW=4096
 
 gqa_options=" \
@@ -165,6 +165,7 @@ TENSORBOARD_DIR="${OUTPUT_BASEPATH}/tensorboard/${NAME}_${current_time}"
 mkdir -p ${TENSORBOARD_DIR}
 
 SAVED_PRETRAIN_CHECKPOINT_PATH="${OUTPUT_BASEPATH}/checkpoint/${NAME}"
+mkdir -p ${SAVED_PRETRAIN_CHECKPOINT_PATH}
 
 megatron_options="  \
         --save ${SAVED_PRETRAIN_CHECKPOINT_PATH} \
@@ -197,8 +198,11 @@ megatron_options="  \
         --save-interval ${SAVE_INTERVAL} \
         --tensorboard-queue-size 1 \
         --tensorboard-dir ${TENSORBOARD_DIR} \
+        --log-throughput \
+        --log-progress \
         --log-timers-to-tensorboard \
         --log-validation-ppl-to-tensorboard \
+        --log-memory-to-tensorboard \
         --tensor-model-parallel-size ${TP} \
         --pipeline-model-parallel-size ${PP} \
         --no-load-optim \

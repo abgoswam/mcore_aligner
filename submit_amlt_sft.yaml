@@ -61,7 +61,7 @@ env_defaults:
 
 
 jobs:
-- name: mcore_aligner_model_convert_NN${NN}_G${G}
+- name: mcore_aligner_sft_NN${NN}_G${G}
   sla_tier: standard  # Default: premium
   execution_mode: basic  # Default: basic
   # sku: ${NN}x80G${G}

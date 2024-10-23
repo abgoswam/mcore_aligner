@@ -21,7 +21,7 @@ sh run_finetune_mcore_mistral_withGA.sh  \
     8 \
     1e-5   \
     1e-6   \
-    128  \
+    8192  \
     128  \
     0   \
     bf16  \
@@ -33,11 +33,11 @@ sh run_finetune_mcore_mistral_withGA.sh  \
     false   \
     false   \
     false \
-    10  \
+    500  \
     /mnt/syntheticpipelinetrainerv1/mcore_posttrain_v1/datasets_test/mistral-datasets/alpaca_zh-mistral-train.json   \
     /mnt/syntheticpipelinetrainerv1/mcore_posttrain_v1/datasets_test/mistral-datasets/alpaca_zh-mistral-valid.json   \
     /mnt/syntheticpipelinetrainerv1/mcore_posttrain_v1/ckpts_produced/Mistral-7B-v0.1-to-mcore-tp1-pp1   \
-    100   \
+    2000   \
     10   \
     ${JOB_PATH}/output_mcore_mistral_sft5
 
@@ -49,7 +49,7 @@ sh run_finetune_mcore_mistral_withGA.sh  \
 # GLOBAL_BATCH_SIZE=$5            # Global batch size
 # LR=$6                           # Learning rate: 1e-5, 5e-5
 # MIN_LR=$7                       # Minimum learning rate: 1e-6, 5e-6
-# SEQ_LEN=$8                      # Sequence length
+# SEQ_LEN=$8                      # Sequence length ==================================
 # PAD_LEN=$9                      # Padding length: 100
 # EXTRA_VOCAB_SIZE=${10}          # Vocabulary expansion size
 # PR=${11}                        # Precision: fp16, bf16
