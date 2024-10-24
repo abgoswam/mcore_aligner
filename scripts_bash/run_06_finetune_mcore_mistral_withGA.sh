@@ -18,7 +18,7 @@ sh run_finetune_mcore_mistral_withGA.sh  \
     ../../ \
     7B   \
     1    \
-    8 \
+    -1 \
     1e-5   \
     1e-6   \
     8192  \
@@ -37,7 +37,7 @@ sh run_finetune_mcore_mistral_withGA.sh  \
     /mnt/syntheticpipelinetrainerv1/mcore_posttrain_v1/datasets_test/mistral-datasets/alpaca_zh-mistral-train.json   \
     /mnt/syntheticpipelinetrainerv1/mcore_posttrain_v1/datasets_test/mistral-datasets/alpaca_zh-mistral-valid.json   \
     /mnt/syntheticpipelinetrainerv1/mcore_posttrain_v1/ckpts_produced/Mistral-7B-v0.1-to-mcore-tp1-pp1   \
-    2000   \
+    1000   \
     10   \
     ${JOB_PATH}/output_mcore_mistral_sft5
 
@@ -46,7 +46,7 @@ sh run_finetune_mcore_mistral_withGA.sh  \
 # MEGATRON_PATCH_PATH=$2          # Path to Megatron Patch code
 # MODEL_SIZE=$3                   # Model size: 7B, 13B
 # BATCH_SIZE=$4                   # Per GPU batch size: 4, 8
-# GLOBAL_BATCH_SIZE=$5            # Global batch size
+# GLOBAL_BATCH_SIZE=$5            # Global batch size ============================== (unused. replaced with TARGET_GLOBAL_BATCH_SIZE)
 # LR=$6                           # Learning rate: 1e-5, 5e-5
 # MIN_LR=$7                       # Minimum learning rate: 1e-6, 5e-6
 # SEQ_LEN=$8                      # Sequence length ==================================

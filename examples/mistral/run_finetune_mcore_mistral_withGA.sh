@@ -8,13 +8,19 @@ MEGATRON_PATH=${MEGATRON_PATCH_PATH}/AMA-Megatron-LM-10152024
 export PYTHONPATH=${MEGATRON_PATH}:${MEGATRON_PATCH_PATH}:$PYTHONPATH
 export CUDA_DEVICE_MAX_CONNECTIONS=1
 if [ $ENV = dsw ]; then
-export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
-MASTER_ADDR=localhost
-MASTER_PORT=$(shuf -n 1 -i 10000-65535)
-NNODES=1
-NODE_RANK=0
-GPUS_PER_NODE=8
-TOTAL_GPUS=$(($GPUS_PER_NODE*$NNODES))
+
+MASTER_ADDR=node-0
+MASTER_PORT=6000
+RDZV_ID=f4694954-bb45-495b-9452-789e6028374a
+DISTRIBUTED_ARGS=(
+    --nproc_per_node $GPUS_PER_NODE 
+    --nnodes $NUM_NODES 
+    --master_addr $MASTER_ADDR 
+    --master_port $MASTER_PORT
+    --rdzv_id $RDZV_ID
+    --rdzv_backend c10d
+    --rdzv_endpoint $MASTER_ADDR:$MASTER_PORT
+)
 
 elif [ $ENV = dlc ]; then
 
@@ -25,11 +31,13 @@ TOTAL_GPUS=$(($GPUS_PER_NODE*$NNODES))
 
 fi
 
-DISTRIBUTED_ARGS="--nproc_per_node $GPUS_PER_NODE --nnodes $NNODES --node_rank $NODE_RANK --master_addr $MASTER_ADDR --master_port $MASTER_PORT"
+# DISTRIBUTED_ARGS="--nproc_per_node $GPUS_PER_NODE --nnodes $NNODES --node_rank $NODE_RANK --master_addr $MASTER_ADDR --master_port $MASTER_PORT"
 
 MODEL_SIZE=$3
 BATCH_SIZE=$4
+# (agoswami) Unused.
 GLOBAL_BATCH_SIZE=$5
+
 LR=$6
 MIN_LR=$7
 SEQ_LEN=$8
@@ -167,6 +175,8 @@ mkdir -p ${TENSORBOARD_DIR}
 SAVED_PRETRAIN_CHECKPOINT_PATH="${OUTPUT_BASEPATH}/checkpoint/${NAME}"
 mkdir -p ${SAVED_PRETRAIN_CHECKPOINT_PATH}
 
+TARGET_GLOBAL_BATCH_SIZE=$((GPUS_PER_NODE * NUM_NODES))
+
 megatron_options="  \
         --save ${SAVED_PRETRAIN_CHECKPOINT_PATH} \
         --train-data-path ${DATASET_PATH} \
@@ -184,7 +194,7 @@ megatron_options="  \
         --train-iters ${TRAIN_ITERS} \
         --split 99,1,0 \
         --micro-batch-size ${BATCH_SIZE} \
-        --global-batch-size ${GLOBAL_BATCH_SIZE} \
+        --global-batch-size ${TARGET_GLOBAL_BATCH_SIZE} \
         --num-layers ${NUM_LAYERS} \
         --hidden-size ${HIDDEN_SIZE} \
         --ffn-hidden-size ${INTERMEDIATE_SIZE} \
@@ -232,7 +242,7 @@ megatron_options="  \
 # run_cmd="python pretrain_mcore_mistral.py
 #  ${megatron_options} ${pr_options} ${load_options} ${te_options} ${activation_checkpoint_options} ${do_options} ${flash_options} ${sp_options} ${gqa_options} ${moe_options}"
 
-run_cmd="torchrun $DISTRIBUTED_ARGS pretrain_mcore_mistral.py
+run_cmd="torchrun ${DISTRIBUTED_ARGS[@]} pretrain_mcore_mistral.py
  ${megatron_options} ${pr_options} ${load_options} ${te_options} ${activation_checkpoint_options} ${do_options} ${flash_options} ${sp_options} ${gqa_options} ${moe_options}"
 
 echo ${run_cmd}

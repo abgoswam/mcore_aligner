@@ -51,10 +51,10 @@ storage:
 
 env_defaults:
   # ===== NUM_NODES =====
-  NN: 1
+  # NN: 1
   # NN: 2
   # NN: 4
-  # NN: 8
+  NN: 8
   # ===== GPUS_PER_NODE =====
   # G: 4
   G: 8
@@ -67,7 +67,7 @@ jobs:
   # sku: ${NN}x80G${G}
   # sku: ${NN}x80G${G}-A100-IB-NvLink # use for multinode
   # sku: ${NN}x80G${G}-A100-NvLink
-  sku: 80G8-A100-IB-NvLink
+  sku: ${NN}x80G8-A100-IB-NvLink
   # sku: G1
   # sku: 80G${G}
   # sku: 80G8
@@ -90,6 +90,8 @@ jobs:
     - set -e
     - set -u
     - export PATH=$$HOME/.local/bin/:$$PATH
+    - export GPUS_PER_NODE=${G}
+    - export NUM_NODES=${NN}
     - echo "===================="
     - echo $$AMLT_EXPERIMENT_NAME
     - echo "===================="
