@@ -13,7 +13,7 @@ DISTRIBUTED_ARGS="--nproc_per_node $GPUS_PER_NODE --nnodes $NNODES --node_rank $
 MODEL_SIZE=$1
 HG_CKPT_PATH=$2
 MEGATRON_PATH=$3
-export PYTHONPATH=$PYTHONPATH:${MEGATRON_PATH}:${MEGATRON_PATH}/Megatron-LM-10152024
+export PYTHONPATH=$PYTHONPATH:${MEGATRON_PATH}:${MEGATRON_PATH}/AMA-Megatron-LM-10152024
 SOURCE_CKPT_PATH=$4
 TARGET_CKPT_PATH=$5
 TP=$6
@@ -24,7 +24,19 @@ EXPERTS_TOPK=${10}
 EP=${11}
 mg2hf=${12}
 
-if [ $MODEL_SIZE = 7B ]; then
+if [ $MODEL_SIZE = 3B ]; then
+
+NUM_LAYERS=32
+HIDDEN_SIZE=3072
+NUM_ATTN_HEADS=32
+INTERMEDIATE_SIZE=8192
+NUM_KEY_VALUE_HEADS=8
+
+gqa_options=" \
+		    --group-query-attention \
+		    --num-query-groups 8"
+
+elif [ $MODEL_SIZE = 7B ]; then
 
 NUM_LAYERS=32
 HIDDEN_SIZE=4096
@@ -69,7 +81,7 @@ fi
 
 
 
-if [ $MODEL_SIZE = 7B ]; then
+if [ $MODEL_SIZE = 7B ] || [ "$MODEL_SIZE" = "3B" ]; then
 
 torchrun ${DISTRIBUTED_ARGS} hf2mcore.py \
     --load_path ${SOURCE_CKPT_PATH} \
