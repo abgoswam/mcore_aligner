@@ -4,3 +4,6 @@
 [submodule "AMA-Megatron-LM-10152024"]
 	path = AMA-Megatron-LM-10152024
 	url = https://github.com/abgoswam/Megatron-LM.git
+[submodule "MSFT-Megatron-LM-10262024"]
+	path = MSFT-Megatron-LM-10262024
+	url = https://github.com/microsoft/Megatron-LM.git
