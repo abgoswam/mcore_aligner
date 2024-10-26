@@ -30,11 +30,8 @@ NUM_LAYERS=32
 HIDDEN_SIZE=3072
 NUM_ATTN_HEADS=32
 INTERMEDIATE_SIZE=8192
-NUM_KEY_VALUE_HEADS=8
 
-gqa_options=" \
-		    --group-query-attention \
-		    --num-query-groups 8"
+gqa_options=""
 
 elif [ $MODEL_SIZE = 7B ]; then
 
