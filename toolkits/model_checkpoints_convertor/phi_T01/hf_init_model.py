@@ -10,6 +10,7 @@ model = AutoModelForCausalLM.from_config(config)
 
 # Save the model and config
 print("Saving...")
-model.save_pretrained("/mnt/syntheticpipelinetrainerv1/mcore_posttrain_v1/ckpts_produced/phi_T01_ckpts/hf_init")
+# model.save_pretrained("/mnt/syntheticpipelinetrainerv1/mcore_posttrain_v1/ckpts_produced/phi_T01_ckpts/hf_init")
+model.save_pretrained("temp")
 
 print("done")
