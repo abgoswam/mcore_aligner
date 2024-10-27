@@ -13,7 +13,7 @@ DISTRIBUTED_ARGS="--nproc_per_node $GPUS_PER_NODE --nnodes $NNODES --node_rank $
 MODEL_SIZE=$1
 HG_CKPT_PATH=$2
 MEGATRON_PATH=$3
-export PYTHONPATH=$PYTHONPATH:${MEGATRON_PATH}:${MEGATRON_PATH}/AMA-Megatron-LM-10152024
+export PYTHONPATH=$PYTHONPATH:${MEGATRON_PATH}:${MEGATRON_PATH}/MSFT-Megatron-LM-10262024
 SOURCE_CKPT_PATH=$4
 TARGET_CKPT_PATH=$5
 TP=$6
@@ -76,9 +76,42 @@ elif [ $mg2hf = false ]; then
     convert_options=""
 fi
 
+if [ "$MODEL_SIZE" = "3B" ]; then
 
+torchrun ${DISTRIBUTED_ARGS} hf2mcore.py \
+    --load_path ${SOURCE_CKPT_PATH} \
+    --save_path ${TARGET_CKPT_PATH} \
+    --load ${HG_CKPT_PATH} \
+    --huggingface_model_path ${HG_CKPT_PATH} \
+    --megatron-path ${MEGATRON_PATH} \
+    --target_tensor_model_parallel_size ${TP} \
+    --target_pipeline_model_parallel_size ${PP} \
+    --micro-batch-size 1 \
+    --fp16 \
+    --swiglu \
+    --num-layers 1 \
+    --hidden-size 1 \
+    --ffn-hidden-size 1 \
+    --norm-epsilon 1e-5 \
+    --num-attention-heads 1 \
+    --max-position-embeddings 1 \
+    --seq-length 1 \
+    --no-async-tensor-model-parallel-allreduce \
+    --patch-tokenizer-type LLamaTokenizer \
+    --extra-vocab-size ${EXTRA_VOCAB_SIZE} \
+    --untie-embeddings-and-output-weights \
+    --no-rope-fusion \
+    --use-rotary-position-embeddings \
+    --transformer-impl transformer_engine \
+    --normalization RMSNorm \
+    --use-mcore-models \
+    --attention-dropout 0.0 \
+    --hidden-dropout 0.0 \
+    ${expert_options} \
+    ${convert_options} \
+    ${gqa_options} \
 
-if [ $MODEL_SIZE = 7B ] || [ "$MODEL_SIZE" = "3B" ]; then
+elif [ $MODEL_SIZE = 7B ]; then
 
 torchrun ${DISTRIBUTED_ARGS} hf2mcore.py \
     --load_path ${SOURCE_CKPT_PATH} \

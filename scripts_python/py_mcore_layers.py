@@ -1,7 +1,7 @@
 import torch
 import sys
 
-sys.path.append('/home/aiscuser/mcore_aligner/AMA-Megatron-LM-10152024')
+sys.path.append('/home/aiscuser/mcore_aligner/MSFT-Megatron-LM-10262024')
 print('\n'.join(sys.path))
 
 # Replace with the path to your Megatron-LM checkpoint
