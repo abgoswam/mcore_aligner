@@ -1,6 +1,5 @@
 mnt/
-temp/
-temp2/
+temp*/
 .vscode
 
 # Byte-compiled / optimized / DLL files
