@@ -1,0 +1,15 @@
+{
+    "added_tokens_decoder": {},
+    "auto_map": {
+      "AutoTokenizer": [
+        "tokenization_phi_T01.PhiT01Tokenizer",
+        "tokenization_phi_T01.PhiT01Tokenizer"
+      ]
+    },
+    "bos_token": "<|endoftext|>",
+    "clean_up_tokenization_spaces": true,
+    "eos_token": "<|endoftext|>",
+    "model_max_length": 8192,
+    "pad_token": "<|endoftext|>",
+    "tokenizer_class": "PhiT01Tokenizer"
+}

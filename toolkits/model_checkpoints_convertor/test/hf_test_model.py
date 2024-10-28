@@ -2,7 +2,8 @@ from transformers import AutoTokenizer, AutoModelForCausalLM
 
 # Load the tokenizer and model
 # model_name = "/mnt/syntheticpipelinetrainerv1/mcore_posttrain_v1/ckpts_base/mistral_ckpts/Mistral-7B-v0.1/"
-model_name = "./temp"
+# model_name = "/home/aiscuser/mcore_aligner/temp"
+model_name = "/home/aiscuser/mcore_aligner/temp_hf_init_ckpt"
 
 model = AutoModelForCausalLM.from_pretrained(model_name, ignore_mismatched_sizes=True, trust_remote_code=True)
 
@@ -21,5 +22,9 @@ inputs = tokenizer(prompt, return_tensors="pt").to(device)
 output = model.generate(**inputs, max_length=100, do_sample=True)
 
 # Decode the output and print it
-generated_text = tokenizer.decode(output[0], skip_special_tokens=True)
-print(generated_text)
+# generated_text = tokenizer.decode(output[0], skip_special_tokens=True)
+# print(generated_text)
+
+# Get the vocabulary size
+vocab_size = tokenizer.vocab_size
+print("Vocabulary size:", vocab_size)

@@ -25,6 +25,13 @@ def _load_tiktoken_bpe(tiktoken_bpe_file: str) -> Dict[bytes, int]:
         for token, rank in (line.split() for line in contents.splitlines() if line)
     }
 
+# TODO(agoswami, to verify) megatron codebase pads vocabularies to ensure matrix multiplication is fast.
+# this in turn causes some indices to be empty. We account for these empty indices by adding
+# dummy tokens to the tokenizer.
+
+EFFECTIVE_PADDED_VOCAB_SIZE = 200064
+ACTUAL_VOCAB_SIZE = 200019
+
 SPECIAL_TOKENS = {
     # tiktoken.get_encoding("o200k_base")._special_tokens
     '<|endoftext|>': 199999, 
@@ -63,7 +70,11 @@ class PhiT01Tokenizer(PreTrainedTokenizer):
         # Initialize tiktoken encoding
         base = tiktoken.get_encoding("o200k_base")
        
-        self.mergeable_ranks = base._mergeable_ranks
+        if vocab_file is None:
+            self.mergeable_ranks: Dict[bytes, int] = base._mergeable_ranks
+        else:
+            self.mergeable_ranks = _load_tiktoken_bpe(vocab_file)
+
         self.pat_str = base._pat_str
 
         # extended 
@@ -98,6 +109,26 @@ class PhiT01Tokenizer(PreTrainedTokenizer):
     def __len__(self):
         return self.tokenizer.n_vocab
     
+
+    
+    def get_vocab(self) -> Dict[Union[str, bytes], int]:
+        return {**self.mergeable_ranks, **self.special_tokens}
+    
+    def convert_tokens_to_ids(
+        self,
+        tokens: Union[bytes, str, List[Union[bytes, str]]]
+    ) -> Union[int, List[int]]:
+        ids = []
+        if isinstance(tokens, (str, bytes)):
+            if tokens in self.special_tokens:
+                return self.special_tokens[tokens]
+            else:
+                return self.mergeable_ranks.get(tokens)
+        ids: List[int] = []
+        for token in tokens:
+            ids.append(self.convert_tokens_to_ids(token))
+        return ids
+
     def _add_tokens(
             self,
             new_tokens: Union[List[str], List[AddedToken]],
@@ -115,24 +146,28 @@ class PhiT01Tokenizer(PreTrainedTokenizer):
                     "And finally, we can re-construct the enc object back\n"
                 )
         return 0
-    
-    def get_vocab(self) -> Dict[Union[str, bytes], int]:
-        return {**self.mergeable_ranks, **self.special_tokens}
 
-    def convert_tokens_to_ids(
+    def save_vocabulary(self, save_directory: str, **kwargs) -> Tuple[str]:
+        file_path = os.path.join(save_directory, "o200k_base.tiktoken")
+        with open(file_path, "w") as f:
+            for token, rank in self.mergeable_ranks.items():
+                line = base64.b64encode(token).decode("utf-8") + " " + str(rank) + "\n"
+                f.write(line)
+        return (file_path,)
+
+    def tokenize(
         self,
-        tokens: Union[bytes, str, List[Union[bytes, str]]]
-    ) -> Union[int, List[int]]:
-        ids = []
-        if isinstance(tokens, (str, bytes)):
-            if tokens in self.special_tokens:
-                return self.special_tokens[tokens]
-            else:
-                return self.mergeable_ranks.get(tokens)
-        ids: List[int] = []
-        for token in tokens:
-            ids.append(self.convert_tokens_to_ids(token))
-        return ids
+        text: str,
+        allowed_special: Union[Set, str] = "all",
+        disallowed_special: Union[Collection, str] = (),
+        **kwargs
+    ) -> List[Union[bytes, str]]:
+        tokens: List[Union[bytes, str]] = []
+        for token_id in self.tokenizer.encode(
+            text, allowed_special=allowed_special, disallowed_special=disallowed_special
+        ):
+            tokens.append(self.decoder[token_id])
+        return tokens
 
     def convert_tokens_to_string(self, tokens: List[Union[bytes, str]]) -> str:
         """
@@ -154,23 +189,15 @@ class PhiT01Tokenizer(PreTrainedTokenizer):
             text += temp.decode("utf-8", errors=self.errors)
         return text
 
-    def tokenize(
-        self,
-        text: str,
-        allowed_special: Union[Set, str] = "all",
-        disallowed_special: Union[Collection, str] = (),
-        **kwargs
-    ) -> List[Union[bytes, str]]:
-        tokens: List[Union[bytes, str]] = []
-        for token_id in self.tokenizer.encode(
-            text, allowed_special=allowed_special, disallowed_special=disallowed_special
-        ):
-            tokens.append(self.decoder[token_id])
-        return tokens
-
     @property
     def vocab_size(self):
         return self.tokenizer.n_vocab
+
+    def _convert_id_to_token(self, index: int) -> Union[bytes, str]:
+        """Converts an id to a token, special tokens included"""
+        if index in self.decoder:
+            return self.decoder[index]
+        raise ValueError("unknown ids")
 
 if __name__ == "__main__":
     # ============================
@@ -191,5 +218,3 @@ if __name__ == "__main__":
 
     # # Example usage: Saving the tokenizer
     # hf_tokenizer.save_vocabulary("./tokenizer")
-
-
