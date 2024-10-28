@@ -24,5 +24,6 @@
     "tie_word_embeddings": false,
     "torch_dtype": "bfloat16",
     "transformers_version": "4.34.0.dev0",
-    "use_cache": true
+    "use_cache": true,
+    "vocab_size": 200064
   }

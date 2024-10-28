@@ -22,8 +22,8 @@ inputs = tokenizer(prompt, return_tensors="pt").to(device)
 output = model.generate(**inputs, max_length=100, do_sample=True)
 
 # Decode the output and print it
-# generated_text = tokenizer.decode(output[0], skip_special_tokens=True)
-# print(generated_text)
+generated_text = tokenizer.decode(output[0], skip_special_tokens=True)
+print(generated_text)
 
 # Get the vocabulary size
 vocab_size = tokenizer.vocab_size

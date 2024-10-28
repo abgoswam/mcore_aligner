@@ -32,6 +32,11 @@ def _load_tiktoken_bpe(tiktoken_bpe_file: str) -> Dict[bytes, int]:
 EFFECTIVE_PADDED_VOCAB_SIZE = 200064
 ACTUAL_VOCAB_SIZE = 200019
 
+DUMMY_TOKENS = {
+    f"<|dummy_id_{offset}|>": ACTUAL_VOCAB_SIZE + offset
+    for offset in range(EFFECTIVE_PADDED_VOCAB_SIZE - ACTUAL_VOCAB_SIZE)
+}
+
 SPECIAL_TOKENS = {
     # tiktoken.get_encoding("o200k_base")._special_tokens
     '<|endoftext|>': 199999, 
@@ -41,6 +46,9 @@ SPECIAL_TOKENS = {
     # The final end of prompt token
     # (unused, but present as a part of tiktoken.get_encoding("cl100k_base")._special_tokens)
     '<|endofprompt|>': 200018,
+    # Dummy tokens to account for padding of the tokenizer
+    # We pad to ensure tensor cores are used for vocab multiplication
+    **DUMMY_TOKENS
 }
 
 class PhiT01Tokenizer(PreTrainedTokenizer):

@@ -7,10 +7,12 @@ output_dir = "temp_hf_init_ckpt"
 # Load the configuration
 print("Initializing config...")
 config = AutoConfig.from_pretrained(os.path.join(input_base_path,"config.json"))
+print(config)
 
 # Initialize the model with random weights
 print("Initializing model...")
 model = AutoModelForCausalLM.from_config(config)
+print(model)
 
 # Save the model and config
 print("Saving...")
