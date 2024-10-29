@@ -99,7 +99,6 @@ torchrun ${DISTRIBUTED_ARGS} hf2mcore.py \
     --no-async-tensor-model-parallel-allreduce \
     --patch-tokenizer-type LLamaTokenizer \
     --extra-vocab-size ${EXTRA_VOCAB_SIZE} \
-    --untie-embeddings-and-output-weights \
     --no-rope-fusion \
     --use-rotary-position-embeddings \
     --transformer-impl transformer_engine \

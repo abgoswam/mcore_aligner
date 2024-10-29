@@ -328,7 +328,9 @@ def convert_checkpoint_from_megatron_to_transformers(mgmodel, hgmodel, args):
                     hgexpert.w3.weight.copy_(fc1_weight)
                     hgexpert.w2.weight.copy_(mgexpert.linear_fc2.weight)
         hgmodel.model.norm.weight.copy_(mgmodel.decoder.final_layernorm.weight)
-        hgmodel.lm_head.weight.copy_(mgmodel.output_layer.weight)
+
+        # mgmodel doesnt have output_layer.weight (tied embeddings). Copy over the embedding.word_embeddings.weight instead.
+        hgmodel.lm_head.weight.copy_(mgmodel.embedding.word_embeddings.weight)
 
 
 def convert_checkpoint_from_transformers_to_megatron(mgmodel, hgmodel, args, hf_config):
