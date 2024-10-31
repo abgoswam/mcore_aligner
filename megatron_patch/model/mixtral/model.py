@@ -118,8 +118,7 @@ class GPTModel(LanguageModule):
             )
 
         if self.share_embeddings_and_output_weights and (self.pre_process or self.post_process):
-            pass
-            # self.initialize_last_stage_with_word_embeddings()
+            self.initialize_last_stage_with_word_embeddings()
 
     def set_input_tensor(self, input_tensor: Tensor) -> None:
         """Sets input tensor to the model.
@@ -138,9 +137,9 @@ class GPTModel(LanguageModule):
         self.decoder.set_input_tensor(input_tensor[0])
 
     # https://github.com/Zyphra/Zamba2/blob/main/mamba_model.py#L83
-    def initialize_last_stage_with_word_embeddings_1(self):
+    def initialize_last_stage_with_word_embeddings(self):
         with torch.no_grad():
-            self.output_layer.weight = self.embedding.weight
+            self.output_layer.weight = self.embedding.word_embeddings.weight
 
     # https://opencsg.com/codes/IEITYuan/Yuan-2.0/blob/main/megatron/core/models/gpt/gpt_model.py
     def initialize_last_stage_with_word_embeddings_2(self):

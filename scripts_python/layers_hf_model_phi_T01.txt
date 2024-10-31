@@ -1,0 +1,26 @@
+MistralForCausalLM(
+  (model): MistralModel(
+    (embed_tokens): Embedding(200064, 3072)
+    (layers): ModuleList(
+      (0-31): 32 x MistralDecoderLayer(
+        (self_attn): MistralSdpaAttention(
+          (q_proj): Linear(in_features=3072, out_features=3072, bias=False)
+          (k_proj): Linear(in_features=3072, out_features=3072, bias=False)
+          (v_proj): Linear(in_features=3072, out_features=3072, bias=False)
+          (o_proj): Linear(in_features=3072, out_features=3072, bias=False)
+          (rotary_emb): MistralRotaryEmbedding()
+        )
+        (mlp): MistralMLP(
+          (gate_proj): Linear(in_features=3072, out_features=8192, bias=False)
+          (up_proj): Linear(in_features=3072, out_features=8192, bias=False)
+          (down_proj): Linear(in_features=8192, out_features=3072, bias=False)
+          (act_fn): SiLU()
+        )
+        (input_layernorm): MistralRMSNorm((3072,), eps=1e-05)
+        (post_attention_layernorm): MistralRMSNorm((3072,), eps=1e-05)
+      )
+    )
+    (norm): MistralRMSNorm((3072,), eps=1e-05)
+  )
+  (lm_head): Linear(in_features=3072, out_features=200064, bias=False)
+)

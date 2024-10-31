@@ -1,9 +1,9 @@
-# import debugpy
-# debugpy.listen(5678)  # 5678 is port
-# print("Waiting for debugger attach")
-# debugpy.wait_for_client()
-# debugpy.breakpoint()
-# print('break on this line')
+import debugpy
+debugpy.listen(5678)  # 5678 is port
+print("Waiting for debugger attach")
+debugpy.wait_for_client()
+debugpy.breakpoint()
+print('break on this line')
 
 import os
 import re
@@ -162,12 +162,13 @@ def create_megatron_model(args, hf_config):
     args.kv_channels = args.hidden_size // args.num_attention_heads
     args.ffn_hidden_size = hf_config.intermediate_size
     args.num_query_groups = hf_config.num_key_value_heads
+    args.tie_word_embeddings = hf_config.tie_word_embeddings
     model = model_provider()
     return model.eval()
 
 
 def copy_huggingface_tokenizer(src_path, dst_path, with_code=False):
-    assert os.path.exists(src_path)
+    assert os.path.exists(src_path), f"{src_path=}"
     os.makedirs(dst_path, exist_ok=True)
     os.system("cp -rf " + src_path + "/config*.json " + dst_path)
     os.system("cp -rf " + src_path + "/tokenizer* " + dst_path)
@@ -199,6 +200,8 @@ def load_megatron_model(args, model):
     ):
         checkpoint_name = get_checkpoint_name(model_path, iteration, release, None, None, None, None, None)
         state_dict = torch.load(checkpoint_name)['model']
+
+        print('this is the path')
     elif (
             args.target_tensor_model_parallel_size == 1
             and args.target_pipeline_model_parallel_size == 1
@@ -289,8 +292,29 @@ def load_megatron_model(args, model):
         raise ValueError('not support yet')
 
     # https://github.com/alibaba/Pai-Megatron-Patch/issues/363
+    # import ipdb; ipdb.set_trace()
+    # handle megatron vocab padding
+    # state_dict['embedding.word_embeddings.weight'] = state_dict['embedding.word_embeddings.weight'][:model.embedding.word_embeddings.weight.size(0)]
+    # state_dict['output_layer.weight'] = state_dict['output_layer.weight'][:model.output_layer.weight.size(0)]
+
+    if args.tie_word_embeddings:
+        # (agoswami) Use the same weights as embedding layer.
+        pass
+
+    if model.share_embeddings_and_output_weights:
+        state_dict['output_layer.weight'] = state_dict['embedding.word_embeddings.weight']
+
     model.load_state_dict(state_dict)
     return model
+
+
+def copy_bias_if_exist(target, source, tag=''):
+    if target.bias is not None:
+        assert source.bias is not None, f"{tag}source bias is None, while target bias is not None."
+        target.bias.copy_(source.bias)
+    else:
+        assert source.bias is None, f"{tag}source bias not None, while target bias is None."
+        print(f"{tag}no bias")
 
 
 def convert_checkpoint_from_megatron_to_transformers(mgmodel, hgmodel, args):
@@ -303,14 +327,36 @@ def convert_checkpoint_from_megatron_to_transformers(mgmodel, hgmodel, args):
         hgmodel.model.embed_tokens.weight.copy_(mgmodel.embedding.word_embeddings.weight)
         for mglayer, hglayer in zip(mgmodel.decoder.layers, hgmodel.model.layers):
             hglayer.input_layernorm.weight.copy_(mglayer.self_attention.linear_qkv.layer_norm_weight)
+            # if mglayer.self_attention.linear_qkv.bias is not None:
+            #     hglayer.input_layernorm.bias.copy_(mglayer.self_attention.linear_qkv.bias)
+
+            # assert len(list(hglayer.input_layernorm.parameters())) == len(list(mglayer.self_attention.linear_qkv.parameters()))
+            # assert len(list(mglayer.self_attention.linear_qkv.parameters())) == 1, f'{mglayer.self_attention.linear_qkv.state_dict().keys()=}'
             qkv_weight = mglayer.self_attention.linear_qkv.weight.view(query_group, -1, head_dim, hidden_size)
+
+            # import ipdb; ipdb.set_trace()
+            # TODO: 
+            # print(f'>>> {qkv_weight.shape=}, {value_num_per_group=}')
             q_weight, k_weight, v_weight = torch.split(qkv_weight, split_size_or_sections=[value_num_per_group, 1, 1],
                                                        dim=1)
+            # import ipdb; ipdb.set_trace()
             hglayer.self_attn.q_proj.weight.copy_(q_weight.reshape(-1, hidden_size))
             hglayer.self_attn.k_proj.weight.copy_(k_weight.reshape(-1, hidden_size))
             hglayer.self_attn.v_proj.weight.copy_(v_weight.reshape(-1, hidden_size))
-
             hglayer.self_attn.o_proj.weight.copy_(mglayer.self_attention.linear_proj.weight)
+
+            if mglayer.self_attention.linear_qkv.bias is not None:
+                bias = hglayer.self_attn.q_proj.bias
+                assert bias is not None, "target qkv has no bias, while source megatron has bias."
+                hidden_size = bias.size(0)
+                qkv_bias = mglayer.self_attention.linear_qkv.bias.view(query_group, -1, head_dim)
+                q_bias, k_bias, v_bias = torch.split(qkv_bias, split_size_or_sections=[value_num_per_group, 1, 1],
+                                                       dim=1)
+                hglayer.self_attn.q_proj.bias.copy_(q_bias.reshape(-1))
+                hglayer.self_attn.k_proj.bias.copy_(k_bias.reshape(-1))
+                hglayer.self_attn.v_proj.bias.copy_(v_bias.reshape(-1))
+                hglayer.self_attn.o_proj.bias.copy_(mglayer.self_attention.linear_proj.bias)
+
             if num_experts is None:
                 gate_weight, fc1_weight = torch.split(mglayer.mlp.linear_fc1.weight,
                                                       split_size_or_sections=args.ffn_hidden_size)
@@ -318,7 +364,21 @@ def convert_checkpoint_from_megatron_to_transformers(mgmodel, hgmodel, args):
                 hglayer.mlp.up_proj.weight.copy_(fc1_weight)
                 hglayer.mlp.down_proj.weight.copy_(mglayer.mlp.linear_fc2.weight)
                 hglayer.post_attention_layernorm.weight.copy_(mglayer.mlp.linear_fc1.layer_norm_weight)
+
+                if mglayer.mlp.linear_fc1.bias is not None:
+                    gate_bias, fc1_bias = torch.split(mglayer.mlp.linear_fc1.bias,
+                                                      split_size_or_sections=args.ffn_hidden_size)
+                    hglayer.mlp.gate_proj.bias.copy_(gate_bias)
+                    hglayer.mlp.up_proj.bias.copy_(fc1_bias)      
+                
+                copy_bias_if_exist(hglayer.mlp.down_proj, mglayer.mlp.linear_fc2, "mlp.down_proj: ")
+                # copy_bias_if_exist(hglayer.post_attention_layernorm, mglayer.mlp.linear_fc1, "mlp.post_attention_layernorm: ")
+                # import ipdb; ipdb.set_trace()
+                # assert len(list(hglayer.post_attention_layernorm.parameters())) == len(list(mglayer.mlp.linear_fc1.parameters()))
+                # assert len(list(mglayer.mlp.linear_fc1.parameters())) == 1
+
             else:
+                print('[!ALERT] bias is NOT handled, it is skipped if exists. Please check.')
                 hglayer.post_attention_layernorm.weight.copy_(mglayer.pre_mlp_layernorm.weight)
                 hglayer.mlp.gate.weight.copy_(mglayer.mlp.router.weight)
                 for mgexpert, hgexpert in zip(mglayer.mlp.experts.local_experts, hglayer.mlp.experts):
@@ -328,9 +388,7 @@ def convert_checkpoint_from_megatron_to_transformers(mgmodel, hgmodel, args):
                     hgexpert.w3.weight.copy_(fc1_weight)
                     hgexpert.w2.weight.copy_(mgexpert.linear_fc2.weight)
         hgmodel.model.norm.weight.copy_(mgmodel.decoder.final_layernorm.weight)
-
-        # mgmodel doesnt have output_layer.weight (tied embeddings). Copy over the embedding.word_embeddings.weight instead.
-        hgmodel.lm_head.weight.copy_(mgmodel.embedding.word_embeddings.weight)
+        hgmodel.lm_head.weight.copy_(mgmodel.output_layer.weight)
 
 
 def convert_checkpoint_from_transformers_to_megatron(mgmodel, hgmodel, args, hf_config):

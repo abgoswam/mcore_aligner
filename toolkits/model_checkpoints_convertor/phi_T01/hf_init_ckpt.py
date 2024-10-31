@@ -2,7 +2,7 @@ import os
 from transformers import AutoConfig, AutoModelForCausalLM, AutoTokenizer
 
 input_base_path = "/home/aiscuser/mcore_aligner/toolkits/model_checkpoints_convertor/phi_T01/"
-output_dir = "temp_hf_init_ckpt"
+output_dir = "temp_hf_init_ckpt_2"
 
 # Load the configuration
 print("Initializing config...")

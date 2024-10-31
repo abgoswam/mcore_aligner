@@ -2,8 +2,9 @@ from transformers import AutoTokenizer, AutoModelForCausalLM
 
 # Load the tokenizer and model
 # model_name = "/mnt/syntheticpipelinetrainerv1/mcore_posttrain_v1/ckpts_base/mistral_ckpts/Mistral-7B-v0.1/"
+# model_name = "/mnt/syntheticpipelinetrainerv1/mcore_posttrain_v1/ckpts_produced/phi_T01_ckpts/2024-09-13-phi3min-tp1pp1-1800b-HF"
 # model_name = "/home/aiscuser/mcore_aligner/temp"
-model_name = "/home/aiscuser/mcore_aligner/temp_hf_init_ckpt"
+model_name = "/home/aiscuser/mcore_aligner/temp_hf_init_ckpt_2"
 
 model = AutoModelForCausalLM.from_pretrained(model_name, ignore_mismatched_sizes=True, trust_remote_code=True)
 

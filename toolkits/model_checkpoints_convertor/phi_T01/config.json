@@ -1,28 +1,32 @@
 {
+  "_name_or_path": "/data/users/xihlin/workspace/mcore_aligner/toolkits/model_checkpoints_convertor/phi_T01/config.json",
   "architectures": [
-      "MistralForCausalLM"
-    ],
+    "Mistral2ForCausalLM"
+  ],
   "auto_map": {
+    "AutoModelForCausalLM": "modeling_phi_T01.Mistral2ForCausalLM",
     "AutoTokenizer": "tokenization_phi_T01.PhiT01Tokenizer"
   },
   "attention_dropout": 0.0,
-    "bos_token_id": 1,
-    "eos_token_id": 2,
-    "hidden_act": "silu",
-    "hidden_size": 3072,
-    "initializer_range": 0.02,
-    "intermediate_size": 8192,
-    "max_position_embeddings": 8192,
-    "model_type": "mistral",
-    "num_attention_heads": 32,
-    "num_key_value_heads": 32,
-    "num_hidden_layers": 32,
-    "rms_norm_eps": 1e-05,
-    "rope_theta": 10000.0,
-    "sliding_window": 4096,
-    "tie_word_embeddings": false,
-    "torch_dtype": "bfloat16",
-    "transformers_version": "4.34.0.dev0",
-    "use_cache": true,
-    "vocab_size": 200064
-  }
+  "bos_token_id": 1,
+  "eos_token_id": 2,
+  "head_dim": 96,
+  "hidden_act": "silu",
+  "hidden_size": 3072,
+  "initializer_range": 0.02,
+  "intermediate_size": 8192,
+  "max_position_embeddings": 8192,
+  "model_type": "mistral",
+  "num_attention_heads": 32,
+  "num_hidden_layers": 32,
+  "num_key_value_heads": 32,
+  "rms_norm_eps": 1e-05,
+  "rope_theta": 10000.0,
+  "sliding_window": 4096,
+  "tie_word_embeddings": true,
+  "torch_dtype": "bfloat16",
+  "transformers_version": "4.46.0",
+  "_attn_implementation": "flash_attention_2",
+  "use_cache": true,
+  "vocab_size": 200064
+}
