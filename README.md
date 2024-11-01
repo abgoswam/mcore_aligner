@@ -1,5 +1,20 @@
 # mcore_aligner
 
+# Model Feature Support
+
+| Feature           | Mistral | Phi_T01 |
+|-------------------|:-------:|:-------:|
+| **HF → MCore**    | ✔️      | NA      |
+| **MCore → HF**    | ✔️      | ✔️      |
+| **CPT (idx)**     | ✔️      |         |
+| **SFT (idx)**     | ?       |         |
+| **SFT (json)**    | ✔️      |         |
+| **[P/D]PO**       | ✘       | ✘       |
+
+
+
+## Mistral
+
 ### Model Conversions.
 
 - HF Mistral -> mcore (Works)
