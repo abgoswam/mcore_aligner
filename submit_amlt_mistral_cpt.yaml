@@ -1,0 +1,98 @@
+description: submit mcore_aligner model conversion.
+
+target:
+  service: sing
+  name: GenAI-Shared-UKSouth
+  workspace_name: synthetic-datagen-ws-wus3
+
+environment:
+  image: nvidia/pytorch:24.06-py3
+  registry: nvcr.io
+  # -------------
+  # image: azureml/azureml_dbe70d50f635d0a59c23037292863d55:latest
+  # username: syntheticdatagen1
+  # registry: syntheticdatagen1.azurecr.io
+  # image_setup:
+  #   - echo "lalala 0806 a" # dummy to start fresh build
+  setup:
+  - echo "export PATH=$$PATH:$$HOME/.local/bin" >> ~/.bashrc && source ~/.bashrc
+  - pip list
+  - echo 'Above is packages before launch cmd'
+  - nvcc --version
+  - pip install gpustat
+  - pip list
+  - echo "setup done"
+
+code:
+  # local directory of the code. this will be uploaded to the server.
+  # $CONFIG_DIR is expanded to the directory of this config file
+  local_dir: $CONFIG_DIR
+  ignore:
+  - my_long_corpus/*
+
+storage:
+  synthdatastore:
+    storage_account_name: syntheticpipelinewus2
+    container_name: datastore
+    mount_dir: /mnt/synthdatastore
+  syntheticpipelinetrainerv1:
+    storage_account_name: syntheticpipelinewus31
+    container_name: genalign-mid-trainer-v1
+    mount_dir: /mnt/syntheticpipelinetrainerv1
+  syntheticpipelinewus31users:
+    storage_account_name: syntheticpipelinewus31
+    container_name: users
+    mount_dir: /mnt/syntheticpipelinewus31users
+
+env_defaults:
+  # ===== NUM_NODES =====
+  NN: 1
+  # NN: 2
+  # NN: 4
+  # NN: 8
+  # ===== GPUS_PER_NODE =====
+  # G: 4
+  G: 8
+
+
+jobs:
+- name: mcore_aligner_cpt_NN${NN}_G${G}
+  sla_tier: standard  # Default: premium
+  execution_mode: basic  # Default: basic
+  # sku: ${NN}x80G${G}
+  # sku: ${NN}x80G${G}-A100-IB-NvLink # use for multinode
+  # sku: ${NN}x80G${G}-A100-NvLink
+  sku: ${NN}x80G8-A100-IB-NvLink
+  # sku: G1
+  # sku: 80G${G}
+  # sku: 80G8
+  # sku: 40000000000G8
+  # sku: 40G1-A100
+  # sku: 40G8-A100-NvLink
+  # sku: G4
+  # sku: 80G4-A100-NvLink
+  priority: high
+  process_count_per_node: 1
+  submit_args:
+    env:
+      NCCL_IB_DISABLE: 0
+      NCCL_DEBUG: INFO
+      NCCL_IB_TIMEOUT: 22
+      _AZUREML_SINGULARITY_JOB_UAI: /subscriptions/584bfbd1-d24e-4f7b-81cf-c953a75c45e5/resourcegroups/synthetic-dategen-RG/providers/Microsoft.ManagedIdentity/userAssignedIdentities/genAlign-umi
+  identity: managed
+  command:
+    - set -x
+    - set -e
+    - set -u
+    - export PATH=$$HOME/.local/bin/:$$PATH
+    - export GPUS_PER_NODE=${G}
+    - export NUM_NODES=${NN}
+    - echo "===================="
+    - echo $$AMLT_EXPERIMENT_NAME
+    - echo "===================="
+    - pwd
+    - ls -lh
+    # Job state.
+    - export JOB_PATH=/mnt/syntheticpipelinetrainerv1/mcore_posttrain_v1/jobs_test/$${AMLT_EXPERIMENT_NAME}/ 
+    # Launch the job.
+    - bash ./scripts_bash/mistral/run_05_pretrain_mcore_mistral.sh
