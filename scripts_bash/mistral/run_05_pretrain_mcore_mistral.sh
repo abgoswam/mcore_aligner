@@ -1,6 +1,6 @@
 #!/bin/bash
 if [ -z "$JOB_PATH" ]; then
-  JOB_PATH=/mnt/syntheticpipelinetrainerv1/mcore_posttrain_v1/ckpts_produced
+  JOB_PATH=/mnt/syntheticpipelinetrainerv1/mcore_posttrain_v1/ckpts_produced/mistral_ckpts/
   MCORE_ALIGNER_PATH=/home/aiscuser/mcore_aligner
 else
   # this is amulet. so JOB_PATH will be set, and code has been uploaded. 

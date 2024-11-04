@@ -47,6 +47,7 @@ from megatron_patch.tokenizer import get_tokenizer, build_tokenizer
 from megatron_patch.arguments import get_patch_args
 from megatron_patch.model.mixtral.model import GPTModel
 from megatron_patch.model.mixtral.layer_specs import get_gpt_layer_with_transformer_engine_spec
+import pretrain_gpt
 
 
 def model_provider(pre_process=True, post_process=True) -> Union[GPTModel,  megatron.legacy.model.GPTModel]:
@@ -164,11 +165,13 @@ def train_valid_test_datasets_provider(train_val_test_num_samples):
                 train_ds, valid_ds, test_ds = \
                                     build_pretrain_dataset_from_original(args.dataset)
     else:
-        train_ds, valid_ds, test_ds = BlendedMegatronDatasetBuilder(
-            GPTDataset,
-            train_val_test_num_samples,
-            core_gpt_dataset_config_from_args(args)
-        ).build()
+        # train_ds, valid_ds, test_ds = BlendedMegatronDatasetBuilder(
+        #     GPTDataset,
+        #     train_val_test_num_samples,
+        #     core_gpt_dataset_config_from_args(args)
+        # ).build()
+
+        train_ds, valid_ds, test_ds = pretrain_gpt.train_valid_test_datasets_provider(train_val_test_num_samples)
 
     return train_ds, valid_ds, test_ds
 

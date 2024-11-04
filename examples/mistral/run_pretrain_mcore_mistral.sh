@@ -2,7 +2,7 @@
 set -e
 ENV=$1
 MEGATRON_PATCH_PATH=$2
-MEGATRON_PATH=${MEGATRON_PATCH_PATH}/Megatron-LM-10152024
+MEGATRON_PATH=${MEGATRON_PATCH_PATH}/AMA-Megatron-LM-10152024
 export PYTHONPATH=${MEGATRON_PATH}:${MEGATRON_PATCH_PATH}:$PYTHONPATH
 export CUDA_DEVICE_MAX_CONNECTIONS=1
 if [ $ENV = dsw ]; then
@@ -167,7 +167,6 @@ SAVED_PRETRAIN_CHECKPOINT_PATH="${OUTPUT_BASEPATH}/checkpoint/${NAME}"
 
 megatron_options="  \
         --save ${SAVED_PRETRAIN_CHECKPOINT_PATH} \
-        --train-data-path ${DATASET_PATH} \
         --data-path ${DATASET_PATH} \
         --lr ${LR} \
         --min-lr ${MIN_LR} \
