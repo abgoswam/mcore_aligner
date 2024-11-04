@@ -2,7 +2,7 @@
 
 # Model Feature Support
 
-| id | Feature             | Mistral | Phi_T01 (200k) |
+| id | Feature             | Mistral(32k vocab) | Phi_T01 (200k vocab) |
 |----|-----------------|:-------:|:-------:|
 | 1  | **HF → MCore**      | ✔️      | NA      |
 | 2  | **MCore → HF**      | ✔️      | ✔️      |
