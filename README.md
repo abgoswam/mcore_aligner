@@ -2,7 +2,7 @@
 
 # Model Feature Support
 
-| Feature             | Mistral | Phi_T01 |
+| Feature             | Mistral | Phi_T01 (200k) |
 |---------------------|:-------:|:-------:|
 | **HF → MCore**      | ✔️      | NA      |
 | **MCore → HF**      | ✔️      | ✔️      |
