@@ -21,7 +21,7 @@ sh run_pretrain_mcore_mistral.sh  \
     8 \
     1e-5   \
     1e-6   \
-    128  \
+    8192  \
     128  \
     0   \
     bf16  \
@@ -34,9 +34,9 @@ sh run_pretrain_mcore_mistral.sh  \
     false   \
     false \
     500  \
-    /mnt/syntheticpipelinetrainerv1/mcore_posttrain_v1/datasets_test/mistral-datasets/wudao_mistralbpe_content_document \
+    /mnt/syntheticpipelinetrainerv1/mcore_posttrain_v1/datasets_test/mistral-datasets/my_mistral_ultrachat_200k_text_document \
     /mnt/syntheticpipelinetrainerv1/mcore_posttrain_v1/ckpts_produced/Mistral-7B-v0.1-to-mcore-tp1-pp1   \
-    100000000   \
+    280000000   \
     10000   \
     ${JOB_PATH}/output_mcore_mistral_cpt2
 
