@@ -220,6 +220,7 @@ megatron_options="  \
         --use-mcore-models \
         --no-rope-fusion \
         --distributed-timeout-minutes 6000 \
+        --ckpt-format torch \
         --transformer-impl transformer_engine"
 
 run_cmd="torchrun $DISTRIBUTED_ARGS pretrain_mcore_mistral.py

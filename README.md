@@ -2,14 +2,13 @@
 
 # Model Feature Support
 
-| Feature           | Mistral | Phi_T01 |
-|-------------------|:-------:|:-------:|
-| **HF → MCore**    | ✔️      | NA      |
-| **MCore → HF**    | ✔️      | ✔️      |
-| **CPT (idx)**     | ✔️      |         |
-| **SFT (idx)**     | ?       |         |
-| **SFT (json)**    | ✔️      |         |
-| **[P/D]PO**       | ✘       | ✘       |
+| Feature             | Mistral | Phi_T01 |
+|---------------------|:-------:|:-------:|
+| **HF → MCore**      | ✔️      | NA      |
+| **MCore → HF**      | ✔️      | ✔️      |
+| **CPT+SFT (idx)**   | ✔️      |         |
+| **SFT (json)**      | ✔️      |         |
+| **[P/D]PO**         | ✘       | ✘       |
 
 
 
@@ -23,12 +22,20 @@
 
  
 ```bash
-amlt run ./submit_amlt_mcore_conversions.yaml
+amlt run ./submit_amlt_mistral_mcore_conversions.yaml
 ```
 
-### SFT.
+### CPT+SFT (idx).
 
-In Progress.
+```bash
+amlt run ./submit_amlt_mistral_cpt_sft.yaml
+```
+
+### SFT (json).
+
+```bash
+amlt run ./submit_amlt_mistral_sft.yaml
+```
 
 ### Inference.
 

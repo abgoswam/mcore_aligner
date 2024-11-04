@@ -1,6 +1,6 @@
 #!/bin/bash
-if [ -z "$JOB_PATH" ]; then
-  JOB_PATH=/mnt/syntheticpipelinetrainerv1/mcore_posttrain_v1/ckpts_produced/mistral_ckpts/
+if [ -z "$AMLT_OUTPUT_JOB_PATH" ]; then
+  AMLT_OUTPUT_JOB_PATH=/mnt/syntheticpipelinetrainerv1/mcore_posttrain_v1/ckpts_produced/mistral_ckpts/
   MCORE_ALIGNER_PATH=/home/aiscuser/mcore_aligner
 else
   # this is amulet. so JOB_PATH will be set, and code has been uploaded. 
@@ -21,7 +21,7 @@ sh run_pretrain_mcore_mistral.sh  \
     8 \
     1e-5   \
     1e-6   \
-    8192  \
+    4096  \
     128  \
     0   \
     bf16  \
@@ -33,12 +33,12 @@ sh run_pretrain_mcore_mistral.sh  \
     false   \
     false   \
     false \
-    500  \
+    200  \
     /mnt/syntheticpipelinetrainerv1/mcore_posttrain_v1/datasets_test/mistral-datasets/my_mistral_ultrachat_200k_text_document \
     /mnt/syntheticpipelinetrainerv1/mcore_posttrain_v1/ckpts_produced/Mistral-7B-v0.1-to-mcore-tp1-pp1   \
     280000000   \
     10000   \
-    ${JOB_PATH}/output_mcore_mistral_cpt2
+    ${AMLT_OUTPUT_JOB_PATH}/output_mcore_mistral_cpt2
 
 
 # ENV=$1                          # Running environment: dlc, dsw

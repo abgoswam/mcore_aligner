@@ -20,6 +20,9 @@ environment:
   - echo 'Above is packages before launch cmd'
   - nvcc --version
   - pip install gpustat
+  - pip install transformers==4.45.2
+  - pip install datasets==3.0.1
+  - pip install sentencepiece==0.2.0
   - pip list
   - echo "setup done"
 
@@ -93,6 +96,6 @@ jobs:
     - pwd
     - ls -lh
     # Job state.
-    - export JOB_PATH=/mnt/syntheticpipelinetrainerv1/mcore_posttrain_v1/jobs_test/$${AMLT_EXPERIMENT_NAME}/ 
+    - export AMLT_OUTPUT_JOB_PATH=/mnt/syntheticpipelinetrainerv1/mcore_posttrain_v1/jobs_test/$${AMLT_EXPERIMENT_NAME}/ 
     # Launch the job.
     - bash ./scripts_bash/mistral/run_05_pretrain_mcore_mistral.sh
