@@ -2,13 +2,13 @@
 
 # Model Feature Support
 
-| Feature             | Mistral | Phi_T01 (200k) |
-|---------------------|:-------:|:-------:|
-| **HF → MCore**      | ✔️      | NA      |
-| **MCore → HF**      | ✔️      | ✔️      |
-| **CPT+SFT (idx)**   | ✔️      |         |
-| **SFT (json)**      | ✔️      |         |
-| **[P/D]PO**         | ✘       | ✘       |
+| id | Feature             | Mistral | Phi_T01 (200k) |
+|----|-----------------|:-------:|:-------:|
+| 1  | **HF → MCore**      | ✔️      | NA      |
+| 2  | **MCore → HF**      | ✔️      | ✔️      |
+| 3  | **CPT+SFT (idx)**   | ✔️      |         |
+| 4  | **SFT (json)**      | ✔️      |         |
+| 5  | **[P/D]PO**         | ✘       | ✘       |
 
 
 
