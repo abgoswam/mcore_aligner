@@ -1,9 +1,9 @@
-import debugpy
-debugpy.listen(5678)  # 5678 is port
-print("Waiting for debugger attach")
-debugpy.wait_for_client()
-debugpy.breakpoint()
-print('break on this line')
+# import debugpy
+# debugpy.listen(5678)  # 5678 is port
+# print("Waiting for debugger attach")
+# debugpy.wait_for_client()
+# debugpy.breakpoint()
+# print('break on this line')
 
 import os
 import re
@@ -187,6 +187,8 @@ def load_megatron_model(args, model):
     model_path = args.load_path
     tracker_filename = get_checkpoint_tracker_filename(model_path)
     iteration, release = read_metadata(tracker_filename)
+    print(f"tracker_filename: {tracker_filename}")
+    print(f"iteration: {iteration}. release: {release}")
     head_dim = args.hidden_size // args.num_attention_heads
     group_per_split = args.num_query_groups // args.target_tensor_model_parallel_size
     num_local_experts = args.num_experts // args.target_expert_model_parallel_size if args.num_experts else 0

@@ -7,8 +7,8 @@ sh hf2mcore_convertor.sh \
 7B \
 /mnt/syntheticpipelinetrainerv1/mcore_posttrain_v1/ckpts_base/mistral_ckpts/Mistral-7B-v0.1 \
 ../../../     \
-/mnt/syntheticpipelinetrainerv1/mcore_posttrain_v1/ckpts_produced/mistral_ckpts/Mistral-7B-v0.1-to-mcore-tp1-pp1 \
-/mnt/syntheticpipelinetrainerv1/mcore_posttrain_v1/ckpts_produced/mistral_ckpts/Mistral-7B-v0.1-to-HF-2  \
+/mnt/syntheticpipelinetrainerv1/mcore_posttrain_v1/jobs_test/massive-man/output_mcore_mistral_cpt2/checkpoint/dsw-pretrain-megatron-gpt3-7B-lr-1e-5-bs-1-seqlen-4096-pr-bf16-tp-1-pp-1-ac-sel-do-true-sp-false-tt-280000000-wt-10000 \
+/mnt/syntheticpipelinetrainerv1/mcore_posttrain_v1/jobs_test/massive-man/output_mcore_mistral_cpt2/ckpt-8400-HF  \
 1  \
 1  \
 0  \

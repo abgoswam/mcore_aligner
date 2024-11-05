@@ -9,7 +9,10 @@ fi
 
 set -u
 
-model_path=${JOB_PATH}/Mistral-7B-v0.1-to-HF-2
+# model_path=${JOB_PATH}/Mistral-7B-v0.1-to-HF-2
+model_path=/mnt/syntheticpipelinetrainerv1/mcore_posttrain_v1/jobs_test/massive-man/output_mcore_mistral_cpt2/ckpt-1400-HF
+# model_path=/mnt/syntheticpipelinetrainerv1/jobs_test/stable-mouse/out_hf_ckpt
+
 
 output_path=.
 
