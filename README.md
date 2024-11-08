@@ -2,13 +2,14 @@
 
 # Model Feature Support
 
-| id | Feature             | Mistral(32k vocab) | Phi_T01 (200k vocab) |
-|----|-----------------|:-------:|:-------:|
-| 1  | **HF → MCore**      | ✔️      | NA      |
-| 2  | **MCore → HF**      | ✔️      | ✔️      |
-| 3  | **CPT+SFT (idx)**   | ✔️      |         |
-| 4  | **SFT (json)**      | ✔️      |         |
-| 5  | **[P/D]PO**         | ✘       | ✘       |
+| id  | Feature             | Mistral (32000 vocab) | Phi_T01 (200k vocab) | Phi3.5 pretrained (32064 vocab) |
+|-----|----------------------|:---------------------:|:--------------------:|:-------------------------------:|
+| 1   | **HF → MCore**      | ✔️                    | NA                   | ✔️                              |
+| 2   | **MCore → HF**      | ✔️                    | ✔️                   | ✔️                              |
+| 3   | **CPT+SFT (idx)**   | ✔️                    |                      |                                 |
+| 4   | **SFT (json)**      | ✔️                    |                      |                                 |
+| 5   | **[P/D]PO**         | ✘                    | ✘                    |                                 |
+
 
 
 

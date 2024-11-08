@@ -5,9 +5,9 @@ sys.path.append('/home/aiscuser/mcore_aligner/MSFT-Megatron-LM-10262024')
 print('\n'.join(sys.path))
 
 # Replace with the path to your Megatron-LM checkpoint
-checkpoint_path = '/mnt/syntheticpipelinetrainerv1/mcore_posttrain_v1/ckpts_produced/Mistral-7B-v0.1-to-mcore-tp1-pp1/release/mp_rank_00/model_optim_rng.pt'
+# checkpoint_path = '/mnt/syntheticpipelinetrainerv1/mcore_posttrain_v1/ckpts_produced/Mistral-7B-v0.1-to-mcore-tp1-pp1/release/mp_rank_00/model_optim_rng.pt'
 # checkpoint_path = '/mnt/syntheticpipelinetrainerv1/mcore_posttrain_v1/ckpts_base/phi_T01_ckpts/2024-09-13-phi3min-tp1pp1-1800b/iter_0429153/mp_rank_00/model_optim_rng.pt'
-
+checkpoint_path = '/mnt/syntheticpipelinetrainerv1/mcore_posttrain_v1/ckpts_converted/phi35_pretrained/phi35_pretrained_mcore_tp1_pp1/release/mp_rank_00/model_optim_rng.pt'
 
 # Load the checkpoint
 checkpoint = torch.load(checkpoint_path, map_location=torch.device('cpu'))
