@@ -34,6 +34,18 @@ set -u
     # --passkey_phrase long context \
     # --output_dir /scratch/azureml/cr/j/5ddef37198784ab08414e6053a76dff1/cap/data-capability/wd/output_dir
 
+# deepspeed /home/aiscuser/mcore_aligner/scripts_passkey/eval_passkey_ds.py \
+#     --use_flash_attention True \
+#     --max_length 262144 \
+#     --trials 5 \
+#     --rope_scaling_factor 1.0 \
+#     --rope_scaling_type linear \
+#     --seed 98052 \
+#     --model_path  /mnt/syntheticpipelinetrainerv1/mcore_posttrain_v1/ckpts_converted/phi35_pretrained/gilopez_Phi-3_1-mling \
+#     --passkey_phrase long context \
+#     --output_dir /home/aiscuser/mcore_aligner/output_dir_passkey
+
+# mistral-7B
 deepspeed /home/aiscuser/mcore_aligner/scripts_passkey/eval_passkey_ds.py \
     --use_flash_attention True \
     --max_length 262144 \
@@ -41,6 +53,6 @@ deepspeed /home/aiscuser/mcore_aligner/scripts_passkey/eval_passkey_ds.py \
     --rope_scaling_factor 1.0 \
     --rope_scaling_type linear \
     --seed 98052 \
-    --model_path  /mnt/syntheticpipelinetrainerv1/mcore_posttrain_v1/ckpts_converted/phi35_pretrained/gilopez_Phi-3_1-mling \
+    --model_path  mistralai/Mistral-7B-v0.1 \
     --passkey_phrase long context \
-    --output_dir /home/aiscuser/mcore_aligner/output_dir_passkey
+    --output_dir /home/aiscuser/mcore_aligner/output_dir_passkey_mistral7b_ds

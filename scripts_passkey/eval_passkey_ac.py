@@ -71,8 +71,13 @@ def resilient_generate(model, *args, **kwargs):
         oom = True
     if oom:
         torch.cuda.empty_cache()
-        kwargs["cache_implementation"] = "quantized"
-        kwargs["cache_config"] = {"nbits": 4, "backend": "quanto"}
+        # offloaded cache
+        kwargs["cache_implementation"] = "offloaded"
+        
+        # quantized cache
+        # kwargs["cache_implementation"] = "quantized"
+        # kwargs["cache_config"] = {"nbits": 4, "backend": "quanto"}
+        
         return model.generate(*args, **kwargs)
 
 def model_gen(model, tokenizer, prompt_text):
