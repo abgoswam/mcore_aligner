@@ -1,28 +1,24 @@
-description: submit mcore_aligner model conversion.
+description: submit genalign_mid_trainer job.
 
 target:
   service: sing
-  name: GenAI-Shared-UKSouth
+  # name:  aims-sing-a100-wus3
+  name:  GenAI-Shared-UKSouth
+  # name:  GenAI-Shared-UKSouth2
   workspace_name: synthetic-datagen-ws-wus3
 
 environment:
   image: nvidia/pytorch:24.06-py3
   registry: nvcr.io
-  # -------------
-  # image: azureml/azureml_dbe70d50f635d0a59c23037292863d55:latest
-  # username: syntheticdatagen1
-  # registry: syntheticdatagen1.azurecr.io
-  # image_setup:
-  #   - echo "lalala 0806 a" # dummy to start fresh build
   setup:
   - echo "export PATH=$$PATH:$$HOME/.local/bin" >> ~/.bashrc && source ~/.bashrc
   - pip list
   - echo 'Above is packages before launch cmd'
   - nvcc --version
   - pip install gpustat
-  - pip install transformers==4.45.2
-  - pip install datasets==3.0.1
-  - pip install sentencepiece==0.2.0
+  - pip install accelerate
+  - pip install lm-eval
+  - pip install seaborn==0.13.2
   - pip list
   - echo "setup done"
 
@@ -59,7 +55,7 @@ env_defaults:
 
 
 jobs:
-- name: mcore_aligner_cpt_NN${NN}_G${G}
+- name: mcore_aligner_eval_NN${NN}_G${G}
   sla_tier: standard  # Default: premium
   execution_mode: basic  # Default: basic
   # sku: ${NN}x80G${G}
@@ -97,6 +93,7 @@ jobs:
     - pwd
     - ls -lh
     # Job state.
-    - export AMLT_OUTPUT_JOB_PATH=/mnt/syntheticpipelinetrainerv1/mcore_posttrain_v1/jobs_test/$${AMLT_EXPERIMENT_NAME}/ 
+    - export HF_CKPT_PATH=/mnt/syntheticpipelinetrainerv1/mcore_posttrain_v1/ckpts_converted/phi35_pretrained/gilopez_Phi-3_1-mling 
+    - export AMLT_OUTPUT_JOB_PATH=/mnt/syntheticpipelinetrainerv1/mcore_posttrain_v1/jobs_test_eval/$${AMLT_EXPERIMENT_NAME}/
     # Launch the job.
-    - bash ./scripts_bash/mistral/run_05_pretrain_mcore_mistral.sh
+    - bash ./scripts_passkey/run_mmlu_passkey.sh
