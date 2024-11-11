@@ -1,6 +1,7 @@
 mnt/
 temp*/
 .vscode
+output_dir_passkey_*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
