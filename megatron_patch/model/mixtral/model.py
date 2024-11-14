@@ -12,9 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Dict, Literal, Optional
+from typing import Literal, Optional
 from torch import Tensor
-import torch
+
 from megatron.core import InferenceParams, parallel_state, tensor_parallel
 from megatron.core.dist_checkpointing.mapping import ShardedStateDict
 from megatron.core.models.common.embeddings.language_model_embedding import LanguageModelEmbedding
@@ -136,53 +136,6 @@ class GPTModel(LanguageModule):
         assert len(input_tensor) == 1, 'input_tensor should only be length 1 for gpt/bert'
         self.decoder.set_input_tensor(input_tensor[0])
 
-    # https://github.com/Zyphra/Zamba2/blob/main/mamba_model.py#L83
-    def initialize_last_stage_with_word_embeddings(self):
-        with torch.no_grad():
-            self.output_layer.weight = self.embedding.word_embeddings.weight
-
-    # https://opencsg.com/codes/IEITYuan/Yuan-2.0/blob/main/megatron/core/models/gpt/gpt_model.py
-    def initialize_last_stage_with_word_embeddings_2(self):
-        # This function just initializes the word embeddings in the final stage
-        # when we are using pipeline parallelism and sharing word
-        # embeddings. Nothing to do if we aren't sharing weights or aren't using
-        # pipeline parallelism.
-        if not self.share_embeddings_and_output_weights or (self.pre_process and self.post_process):
-            return
-        if self.post_process and not self.pre_process:
-            assert not parallel_state.is_pipeline_first_stage()
-            # set word_embeddings weights to 0 here, then copy first
-            # stage's weights using all_reduce below.
-            self.output_layer.weight.data.fill_(0)
-            self.output_layer.weight.shared = True
-        # Parameters are shared between the word embeddings layers, and the
-        # heads at the end of the model. In a pipelined setup with more than
-        # one stage, the initial embedding layer and the head are on different
-        # workers, so we do the following:
-        # 1. Create a second copy of word_embeddings on the last stage, with
-        #    initial parameters of 0.0.
-        # 2. Do an all-reduce between the first and last stage to ensure that
-        #    the two copies of word_embeddings start off with the same
-        #    parameter values.
-        # 3. In the training loop, before an all-reduce between the grads of
-        #    the two word_embeddings layers to ensure that every applied weight
-        #    update is the same on both stages.
-        # Ensure that first and last stages have the same initial parameter
-        # values.
-        if torch.distributed.is_initialized():
-            if parallel_state.is_rank_in_embedding_group():
-                weight = self.shared_embedding_or_output_weight()
-                torch.distributed.all_reduce(weight.data, group=parallel_state.get_embedding_group())
-        elif not getattr(GPTModel, "embedding_warning_printed", False):
-            logging.getLogger(__name__).warning(
-                "Distributed processes aren't initialized, so the output layer "
-                "is not initialized with weights from the word embeddings. "
-                "If you are just manipulating a model this is fine, but "
-                "this needs to be handled manually. If you are training "
-                "something is definitely wrong."
-            )
-            GPTModel.embedding_warning_printed = True
-
     def forward(
         self,
         input_ids: Tensor,
@@ -262,27 +215,73 @@ class GPTModel(LanguageModule):
 
         return loss
 
-    def sharded_state_dict(
-        self, prefix: str = '', sharded_offsets: tuple = (), metadata: Optional[Dict] = None
-    ) -> ShardedStateDict:
-        """ Sharded state dict implementation for GPTModel backward-compatibility (removing extra state).
+    def sharded_state_dict(self, prefix: str = '', sharded_offsets: tuple = ()) -> ShardedStateDict:
+        """
+        Returns a sharded state dictionary for distributed training, where model parameters
+        are partitioned across different devices or processes.
 
         Args:
-            prefix (str): Module name prefix.
-            sharded_offsets (tuple): PP related offsets, expected to be empty at this module level.
-            metadata (Optional[Dict]): metadata controlling sharded state dict creation.
+            prefix (str, optional): A prefix to prepend to each key in the state dictionary.
+                                    This can be used to distinguish parameters of different
+                                    model components when combining state dictionaries.
+            sharded_offsets (tuple, optional): Offsets for sharding the state dictionary. It
+                                                typically contains the start index for each shard
+                                                and the overall size of the model parameter. It
+                                                should be empty for this model as offsets are not
+                                                expected.
 
         Returns:
-            ShardedStateDict: sharded state dict for the GPTModel
+            ShardedStateDict: A dictionary containing model parameters with keys prepended by `prefix`.
+                              The parameters are sharded according to the tensor parallelism configuration.
         """
-        sharded_state_dict = super().sharded_state_dict(prefix, sharded_offsets, metadata)
-        output_layer_extra_state_key = f'{prefix}output_layer._extra_state'
+        assert not sharded_offsets, "Unexpected sharded offsets"
+        sharded_state_dict = {}
 
-        # Old GPT checkpoints only stored the output layer weight key. So we remove the _extra_state key
-        # but check that it doesn't contain any data anyway
-        output_extra_state = sharded_state_dict.pop(output_layer_extra_state_key, None)
-        assert not (
-            output_extra_state and output_extra_state.data
-        ), f'Expected output layer extra state to be empty, got: {output_extra_state}'
+        if self.pre_process:
+            embedding_prefix = f'{prefix}embedding.'
+            embedding_sharded_state_dict = self.embedding.sharded_state_dict(
+                prefix=embedding_prefix
+            )
+            sharded_state_dict.update(embedding_sharded_state_dict)
+
+        decoder_prefix = f'{prefix}decoder.'
+        decoder_sharded_state_dict = self.decoder.sharded_state_dict(prefix=decoder_prefix)
+        sharded_state_dict.update(decoder_sharded_state_dict)
+
+        if self.post_process:
+            output_layer_prefix = f'{prefix}output_layer.'
+            output_layer_key = f'{output_layer_prefix}weight'
+            if self.share_embeddings_and_output_weights:
+                if not self.pre_process:
+                    # when sharing embeddings with last stage, we need to use the weights from the first stage
+                    # on pipeline first rank, word embeddings are saved to {prefix}embedding.word_embeddings.weight
+                    tensor = self.shared_embedding_or_output_weight()
+                    first_stage_word_emb_key = f'{prefix}embedding.word_embeddings.weight'
+                    last_stage_word_emb_replica_id = (
+                        1,  # copy of first stage embedding
+                        0,
+                        parallel_state.get_data_parallel_rank(with_context_parallel=True),
+                    )
+
+                    sharded_output_layer_tensor = make_tp_sharded_tensor_for_checkpoint(
+                        tensor=tensor,
+                        key=first_stage_word_emb_key,
+                        replica_id=last_stage_word_emb_replica_id,
+                        allow_shape_mismatch=True,
+                    )
+
+                    sharded_state_dict[output_layer_key] = sharded_output_layer_tensor
+
+            else:
+                output_layer_state_dict = self.output_layer.state_dict(
+                    prefix=output_layer_prefix, keep_vars=True
+                )
+                output_layer_tensor = output_layer_state_dict[output_layer_key]
+                # independent output layer
+                sharded_output_layer_tensor = make_tp_sharded_tensor_for_checkpoint(
+                    tensor=output_layer_tensor, key=output_layer_key, allow_shape_mismatch=True,
+                )
+
+                sharded_state_dict[output_layer_key] = sharded_output_layer_tensor
 
         return sharded_state_dict

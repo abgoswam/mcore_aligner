@@ -110,9 +110,6 @@ class MLP(MegatronModule):
 
         return output, output_bias
 
-    # --ckpt-format torch
-    # https://github.com/NVIDIA/Megatron-LM/commit/1af20dd139bd06b37173d3bd3d2cbcc7ba4e7921
-    # https://github.com/NVIDIA/Megatron-LM/commit/2fe20368be582661a71743f4c7466d246b30ee0d
     def sharded_state_dict(self, prefix: str = '', sharded_offsets: tuple = ()) -> ShardedStateDict:
         sharded_state_dict = {}
         for name, module in self._modules.items():
