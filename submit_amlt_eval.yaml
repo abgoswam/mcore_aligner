@@ -93,7 +93,9 @@ jobs:
     - pwd
     - ls -lh
     # Job state.
-    - export HF_CKPT_PATH=/mnt/syntheticpipelinetrainerv1/mcore_posttrain_v1/ckpts_converted/phi35_pretrained/gilopez_Phi-3_1-mling 
+    # - export HF_CKPT_PATH=/mnt/syntheticpipelinetrainerv1/mcore_posttrain_v1/ckpts_converted/phi35_pretrained/gilopez_Phi-3_1-mling # phi3.1 pretrained ckpt
+    # - export HF_CKPT_PATH=/mnt/syntheticpipelinetrainerv1/mcore_posttrain_v1/ckpts_base/mistral_ckpts/Mistral-7B-v0.1  # Mistral ckpt
+    - export HF_CKPT_PATH=/mnt/syntheticpipelinetrainerv1/mcore_posttrain_v1/ckpts_base/phi_T02_ckpts/phi4_with_gqa-tp1pp1-3000b-gbs8388608-mbs2-lr5e-4-HF  # phi_T02 ckpt Ishmam
     - export AMLT_OUTPUT_JOB_PATH=/mnt/syntheticpipelinetrainerv1/mcore_posttrain_v1/jobs_test_eval/$${AMLT_EXPERIMENT_NAME}/
     # Launch the job.
     - bash ./scripts_passkey/run_mmlu_passkey.sh
