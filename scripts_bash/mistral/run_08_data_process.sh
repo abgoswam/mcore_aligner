@@ -14,9 +14,18 @@ set -u
 #        --tokenizer-model /mnt/syntheticpipelinetrainerv1/mcore_posttrain_v1/ckpts_base/mistral_ckpts/Mistral-7B-v0.1/tokenizer.model \
 #        --workers 32
 
+# data cook for SFT trials using Mistral-7B
+# python tools/preprocess_data.py \
+#        --input /mnt/syntheticpipelinetrainerv1/mcore_posttrain_v1/datasets_test/mistral-datasets/output_dir_ultrachat_200k/text_token_count_dataset.jsonl \
+#        --output-prefix my_mistral_ultrachat_200k \
+#        --tokenizer-type HuggingFaceTokenizer \
+#        --tokenizer-model mistralai/Mistral-7B-v0.1 \
+#        --workers 32
+
+# data cook understand .bin/.idx files.
 python tools/preprocess_data.py \
-       --input /mnt/syntheticpipelinetrainerv1/mcore_posttrain_v1/datasets_test/mistral-datasets/output_dir_ultrachat_200k/text_token_count_dataset.jsonl \
-       --output-prefix my_mistral_ultrachat_200k \
+       --input hello_world.jsonl \
+       --output-prefix my_hello_world \
        --tokenizer-type HuggingFaceTokenizer \
        --tokenizer-model mistralai/Mistral-7B-v0.1 \
        --workers 32
