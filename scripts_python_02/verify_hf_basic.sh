@@ -48,7 +48,7 @@ EVAL_AND_LOGGING_ARGS=()
 # Construct the command
 cmd="${ENV_VARS[@]} \
     torchrun ${DISTRIBUTED_ARGS[@]} \
-    /home/aiscuser/mcore_aligner/scripts_python/verify_hf.py \
+    /home/aiscuser/mcore_aligner/scripts_python_02/verify_hf_basic.py \
     ${GPT_MODEL_ARGS[@]} \
     ${TRAINING_ARGS[@]} \
     ${MODEL_PARALLEL_ARGS[@]} \

@@ -1,3 +1,10 @@
+import debugpy
+debugpy.listen(5678)  # 5678 is port
+print("Waiting for debugger attach")
+debugpy.wait_for_client()
+debugpy.breakpoint()
+print('break on this line')
+
 """Sample Generate GPT"""
 import os
 import sys
@@ -23,7 +30,7 @@ from megatron.core.models.gpt.gpt_layer_specs import (
 import torch
 from typing import Union
 import megatron
-
+from pprint import pprint
 
 def model_provider(pre_process=True, post_process=True) -> Union[GPTModel, megatron.legacy.model.GPTModel]:
     """Builds the model.
@@ -92,11 +99,13 @@ if __name__ == "__main__":
 
     initialize_megatron()
     args = get_args()
+    pprint(vars(args))
 
     # Set up model and load checkpoint
     model = get_model(model_provider, wrap_with_ddp=False)
+    print(model)
 
-    load_path = "/mnt/std-cache/users/xihlin/tmp/megatron_lm//2024-10-24-phi3_silica-tp1pp1-200b-gbs8388608-mbs2-adam_eps_1e-7-untied_emb-rope10k"
+    load_path = "blah"
     args.load = load_path
     _ = load_checkpoint(model, None, None)
 
