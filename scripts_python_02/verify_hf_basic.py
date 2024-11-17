@@ -1,9 +1,9 @@
-import debugpy
-debugpy.listen(5678)  # 5678 is port
-print("Waiting for debugger attach")
-debugpy.wait_for_client()
-debugpy.breakpoint()
-print('break on this line')
+# import debugpy
+# debugpy.listen(5678)  # 5678 is port
+# print("Waiting for debugger attach")
+# debugpy.wait_for_client()
+# debugpy.breakpoint()
+# print('break on this line')
 
 """Sample Generate GPT"""
 import os
@@ -105,7 +105,7 @@ if __name__ == "__main__":
     model = get_model(model_provider, wrap_with_ddp=False)
     print(model)
 
-    load_path = "blah"
+    load_path = "/mnt/syntheticpipelinetrainerv1/mcore_posttrain_v1/ckpts_converted/mistral_ckpts/Mistral-7B-v0.1-to-mcore-tp1-pp1/"
     args.load = load_path
     _ = load_checkpoint(model, None, None)
 
@@ -113,7 +113,7 @@ if __name__ == "__main__":
     model = model[0].eval()
     tokenizer = get_tokenizer()
 
-    hf_path = "/data/users/xihlin/tmp/megatron_lm//2024-10-24-phi3_silica-tp1pp1-200b-gbs8388608-mbs2-adam_eps_1e-7-untied_emb-rope10k-hf2"
+    hf_path = "/mnt/syntheticpipelinetrainerv1/mcore_posttrain_v1/ckpts_base/mistral_ckpts/Mistral-7B-v0.1"
     # sys.path.append(hf_path)
     # from modeling_mistral import MistralForCausalLM
     hf_tok = AutoTokenizer.from_pretrained(hf_path)

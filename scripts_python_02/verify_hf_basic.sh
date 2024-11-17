@@ -18,7 +18,8 @@ GPT_MODEL_ARGS=(
     --transformer-impl transformer_engine
     --normalization RMSNorm
     --num-layers 32 
-    --hidden-size 4096 
+    --hidden-size 4096
+    --ffn-hidden-size 14336 
     --num-attention-heads 32 
     --seq-length $SEQ_LEN 
     --max-position-embeddings $SEQ_LEN 
@@ -27,6 +28,10 @@ GPT_MODEL_ARGS=(
     --rotary-base 10000
     --swiglu
     --untie-embeddings-and-output-weights
+    --no-position-embedding
+    --disable-bias-linear
+    --group-query-attention
+	--num-query-groups 8
 )
 
 TRAINING_ARGS=(
