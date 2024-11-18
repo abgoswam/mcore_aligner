@@ -26,9 +26,9 @@ GPT_MODEL_ARGS=(
     --position-embedding-type rope
     --rotary-percent 1.0
     --rotary-base 10000
+    --no-position-embedding
     --swiglu
     --untie-embeddings-and-output-weights
-    --no-position-embedding
     --disable-bias-linear
     --group-query-attention
 	--num-query-groups 8

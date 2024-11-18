@@ -1,9 +1,9 @@
-# import debugpy
-# debugpy.listen(5678)  # 5678 is port
-# print("Waiting for debugger attach")
-# debugpy.wait_for_client()
-# debugpy.breakpoint()
-# print('break on this line')
+import debugpy
+debugpy.listen(5678)  # 5678 is port
+print("Waiting for debugger attach")
+debugpy.wait_for_client()
+debugpy.breakpoint()
+print('break on this line')
 
 """Sample Generate GPT"""
 import os
@@ -85,7 +85,9 @@ def model_provider(pre_process=True, post_process=True) -> Union[GPTModel, megat
             parallel_output=False,
             share_embeddings_and_output_weights=not args.untie_embeddings_and_output_weights,
             position_embedding_type=args.position_embedding_type,
-            rotary_percent=args.rotary_percent
+            rotary_percent=args.rotary_percent,
+            rotary_base=args.rotary_base,
+            rope_scaling=args.use_rope_scaling
         )
 
     return model
