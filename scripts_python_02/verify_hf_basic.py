@@ -1,9 +1,9 @@
-import debugpy
-debugpy.listen(5678)  # 5678 is port
-print("Waiting for debugger attach")
-debugpy.wait_for_client()
-debugpy.breakpoint()
-print('break on this line')
+# import debugpy
+# debugpy.listen(5678)  # 5678 is port
+# print("Waiting for debugger attach")
+# debugpy.wait_for_client()
+# debugpy.breakpoint()
+# print('break on this line')
 
 """Sample Generate GPT"""
 import os
@@ -115,8 +115,6 @@ if __name__ == "__main__":
     for name, param in hf_model.named_parameters():
         print(f"{name}: {param.size()}")
 
-    hf_model.cuda().eval().to(torch.bfloat16)
-
     #########################################################
     # Initialize MG ckpt.
 
@@ -165,6 +163,32 @@ if __name__ == "__main__":
     # verify logits, responses.
 
     prompts = ["Fun fact:"]
+
+    # Check if GPU is available
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    print(f"Using device: {device}")
+
+    hf_model = hf_model.to(device)
+    print(hf_model)
+
+    # Extract logits (1)
+    inputs = hf_tok(prompts[0], return_tensors="pt").to(device)
+    with torch.no_grad():
+        output = hf_model(**inputs)
+    
+    print("inputs:{}".format(inputs))
+    print("output.logits:{}".format(output.logits))
+
+    # Extract logits (2)
+    hf_model.eval()
+    hf_prompt0_tokens = hf_tok.encode(prompts[0], return_tensors='pt').cuda()
+    hf_prompt0_logits = hf_model(hf_prompt0_tokens).logits
+    print("hf_prompt0_tokens:{}".format(hf_prompt0_tokens))
+    print("hf_prompt0_logits:{}".format(hf_prompt0_logits))
+
+    #######################################################
+    # Generation based.
+
     tokens_to_generate = 100
     logprobs = True
     top_k = 1
