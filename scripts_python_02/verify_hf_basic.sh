@@ -23,12 +23,12 @@ GPT_MODEL_ARGS=(
     --num-attention-heads 32 
     --seq-length $SEQ_LEN 
     --max-position-embeddings $SEQ_LEN 
+    --untie-embeddings-and-output-weights
     --position-embedding-type rope
     --rotary-percent 1.0
     --rotary-base 10000
     --no-position-embedding
     --swiglu
-    --untie-embeddings-and-output-weights
     --disable-bias-linear
     --group-query-attention
 	--num-query-groups 8

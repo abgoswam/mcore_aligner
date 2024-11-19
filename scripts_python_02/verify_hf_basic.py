@@ -103,27 +103,68 @@ if __name__ == "__main__":
     args = get_args()
     pprint(vars(args))
 
-    # Set up model and load checkpoint
-    model = get_model(model_provider, wrap_with_ddp=False)
-    print(model)
-
-    load_path = "/mnt/syntheticpipelinetrainerv1/mcore_posttrain_v1/ckpts_converted/mistral_ckpts/Mistral-7B-v0.1-to-mcore-tp1-pp1/"
-    args.load = load_path
-    _ = load_checkpoint(model, None, None)
-
-    assert len(model) == 1, "Above condition should have caught this"
-    model = model[0].eval()
-    tokenizer = get_tokenizer()
-
+    ########################################################
+    # Load HF model.
+    
     hf_path = "/mnt/syntheticpipelinetrainerv1/mcore_posttrain_v1/ckpts_base/mistral_ckpts/Mistral-7B-v0.1"
-    # sys.path.append(hf_path)
-    # from modeling_mistral import MistralForCausalLM
     hf_tok = AutoTokenizer.from_pretrained(hf_path)
-    # hf_model = MistralForCausalLM.from_pretrained(hf_path)
     hf_model = AutoModelForCausalLM.from_pretrained(hf_path, trust_remote_code=True)
+
+    # Print out the parameter names and their sizes
+    print("[hf_model] Parameters and their sizes:")
+    for name, param in hf_model.named_parameters():
+        print(f"{name}: {param.size()}")
+
     hf_model.cuda().eval().to(torch.bfloat16)
 
-    prompts = ["This is a test of "]
+    #########################################################
+    # Initialize MG ckpt.
+
+    mg_model = get_model(model_provider, wrap_with_ddp=False)
+    print(mg_model)
+
+    # MG Print out the parameter names and their sizes
+    print("[mg_model] Parameters and their sizes:")
+    for name, param in mg_model[0].named_parameters():
+        print(f"{name}: {param.size()}")
+
+    #########################################################
+    # Inspect provided MG ckpt.
+
+    base_mcore_ckpt_path = "/mnt/syntheticpipelinetrainerv1/mcore_posttrain_v1/ckpts_converted/mistral_ckpts/Mistral-7B-v0.1-to-mcore-tp1-pp1/"
+
+    # Load the checkpoint
+    checkpoint = torch.load(
+                    os.path.join(base_mcore_ckpt_path, "release/mp_rank_00/model_optim_rng.pt"), 
+                    map_location=torch.device('cpu'))
+    # print(checkpoint)
+
+    # # Access the state dictionary
+    model_state_dict = checkpoint['model']
+
+    # # Print the layers and their sizes
+    # # Iterate over the state_dict items and print layer names and their sizes
+    for layer_name, tensor in model_state_dict.items():
+        if isinstance(tensor, torch.Tensor):  # Check if the item is a tensor
+            print(f"Layer: {layer_name}, Size: {tuple(tensor.size())}")
+        else:
+            # print(f"Layer: {layer_name} is not a tensor, found type: {type(tensor)}")
+            pass
+
+    ########################################################
+    # Load provided MG ckpt.
+
+    args.load = base_mcore_ckpt_path
+    _ = load_checkpoint(mg_model, None, None)
+
+    assert len(mg_model) == 1, "Above condition should have caught this"
+    mg_model = mg_model[0].eval()
+    mg_tokenizer = get_tokenizer()
+
+    ######################################################
+    # verify logits, responses.
+
+    prompts = ["Fun fact:"]
     tokens_to_generate = 100
     logprobs = True
     top_k = 1
@@ -139,7 +180,7 @@ if __name__ == "__main__":
 
     response, response_seg, response_logprobs, _ = \
         generate_and_post_process(
-        model,
+        mg_model,
         prompts=prompts,
         tokens_to_generate=tokens_to_generate,
         return_output_log_probs=logprobs,
@@ -158,20 +199,23 @@ if __name__ == "__main__":
 
     hf_x = hf_tok.encode(prompts[0], return_tensors='pt').cuda()
     hf_y = hf_model.generate(hf_x, top_k=1)
+    hf_response = hf_tok.decode(hf_y[0])
 
     print(f'HF: prompt: {hf_tok.encode(prompts[0])}')
-    print(f'MG: prompt: {tokenizer.tokenize(prompts[0])}')
+    print(f'MG: prompt: {mg_tokenizer.tokenize(prompts[0])}')
     print(f'HF: {hf_y[0].tolist()}')
-    print(f'MG: {tokenizer.tokenize(response)[0]}')
+    print(f'MG: {mg_tokenizer.tokenize(response)[0]}')
+
+    assert hf_response == response[0], f"Mismatch detected:\nHF Response: {hf_response}\nMG Response: {response}"
 
     hf_logits = hf_model(hf_y).logits.squeeze(0)
     hf_logits = hf_logits.gather(1, hf_x[0, :, None])
     
-    print((model.module.embedding.word_embeddings.weight[:32000] - hf_model.model.embed_tokens.weight).abs().max())
-    print((model.module.decoder.layers[0]))
+    print((mg_model.module.embedding.word_embeddings.weight[:32000] - hf_model.model.embed_tokens.weight).abs().max())
+    print((mg_model.module.decoder.layers[0]))
 
 
-    mg = model.module.decoder.layers[0]
+    mg = mg_model.module.decoder.layers[0]
     hf = hf_model.model.layers[0]
 
     x = torch.randn(1, 8, 3072, dtype=torch.bfloat16).cuda()
@@ -207,7 +251,7 @@ if __name__ == "__main__":
 
     with torch.no_grad():
         hf_model(hf_x)
-        model(hf_x, None, None)
+        mg_model(hf_x, None, None)
 
 
 
