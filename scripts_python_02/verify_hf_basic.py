@@ -1,9 +1,9 @@
-# import debugpy
-# debugpy.listen(5678)  # 5678 is port
-# print("Waiting for debugger attach")
-# debugpy.wait_for_client()
-# debugpy.breakpoint()
-# print('break on this line')
+import debugpy
+debugpy.listen(5678)  # 5678 is port
+print("Waiting for debugger attach")
+debugpy.wait_for_client()
+debugpy.breakpoint()
+print('break on this line')
 
 """Sample Generate GPT"""
 import os
@@ -92,7 +92,69 @@ def model_provider(pre_process=True, post_process=True) -> Union[GPTModel, megat
 
     return model
 
+def verify_tokenizer(hf_tokenizer, prompt="Fun fact:"):
+    mg_tokenizer = get_tokenizer()
 
+    assert len(hf_tokenizer) == mg_tokenizer.vocab_size
+
+    hf_x_list = hf_tokenizer.encode(prompt)
+    mg_x_list = mg_tokenizer.tokenize(prompt)
+    assert hf_x_list == mg_x_list, f">> {hf_x_list=}\n{mg_x_list=}"
+
+
+def verify_logits(
+            hf_model,
+            hf_tokenizer, 
+            mg_model, 
+            prompt="Fun fact:", 
+            verify=True):
+    
+    # first verify tokenizer.
+    verify_tokenizer(hf_tokenizer)
+
+    # Extract logits (1)
+    inputs = hf_tok(prompt, return_tensors="pt").to(device)
+    with torch.no_grad():
+        output = hf_model(**inputs)
+    
+    print("inputs:{}".format(inputs))
+    print("output.logits:{}".format(output.logits))
+
+    inputs['position_ids']=inputs['attention_mask'] # otherwise we hit error.
+    mg_logits0 = mg_model(**inputs)
+    print("mg_logits0:{}".format(mg_logits0))
+
+    if verify:
+        print("Doing verification of logits....")
+        # TODO (agoswami): Not sure how this works for Turing ckpoint. Need to investigate
+        # hf_logits = hf_model(hf_x).logits.view(hf_x.size(-1), -1).float()
+        # mg_logits = mg_model(hf_x).view(hf_x.size(-1), -1).float()
+        # We will use what we know.
+        hf_logits = output.logits
+        mg_logits = mg_logits0
+
+        # remove mg padding
+        mg_logits = mg_logits[:, :hf_logits.size(1)].float()
+        max_diff = (hf_logits - mg_logits).abs().max().item()
+        q99_diff = torch.quantile((hf_logits - mg_logits).abs(), 0.99).item()
+        q95_diff = torch.quantile((hf_logits - mg_logits).abs(), 0.95).item()
+
+        print(f'> {hf_logits=}\n> {mg_logits=}')
+        print(f'> {max_diff=}, {q99_diff=}, {q95_diff=}')
+
+        assert torch.allclose(hf_logits, mg_logits, rtol=1e-1, atol=3e-1), \
+            f'> {hf_logits=}\n> {mg_logits=}'
+
+        hf_argmax = hf_logits.argmax(-1)
+        mg_argmax = mg_logits.argmax(-1)
+        assert (hf_argmax == mg_argmax).all(), f'> {hf_argmax=}, {mg_argmax=}'
+        # assert q99_diff < 0.1
+        # assert q95_diff < 0.1
+        print('> Verification passed.')
+        # Uncomment the following the ipdb to do interactive debug
+        # import ipdb; ipdb.set_trace()
+    else:
+        print("Skipping verification of logits....")
 
 
 if __name__ == "__main__":
@@ -110,6 +172,13 @@ if __name__ == "__main__":
     hf_tok = AutoTokenizer.from_pretrained(hf_path)
     hf_model = AutoModelForCausalLM.from_pretrained(hf_path, trust_remote_code=True)
 
+    # Check if GPU is available
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    print(f"Using device: {device}")
+
+    hf_model = hf_model.to(device).eval()
+    print(hf_model)
+
     # Print out the parameter names and their sizes
     print("[hf_model] Parameters and their sizes:")
     for name, param in hf_model.named_parameters():
@@ -118,13 +187,21 @@ if __name__ == "__main__":
     #########################################################
     # Initialize MG ckpt.
 
-    mg_model = get_model(model_provider, wrap_with_ddp=False)
-    print(mg_model)
+    mg_model_list = get_model(model_provider, wrap_with_ddp=False)
+
+    # Print out args of the init ckpt.
+    # TODO (agoswami)
 
     # MG Print out the parameter names and their sizes
-    print("[mg_model] Parameters and their sizes:")
-    for name, param in mg_model[0].named_parameters():
+    for name, param in mg_model_list[0].named_parameters():
         print(f"{name}: {param.size()}")
+
+    verify_logits( 
+        hf_model=hf_model, 
+        hf_tokenizer=hf_tok,
+        mg_model=mg_model_list[0],
+        verify=False
+    )
 
     #########################################################
     # Inspect provided MG ckpt.
@@ -136,6 +213,9 @@ if __name__ == "__main__":
                     os.path.join(base_mcore_ckpt_path, "release/mp_rank_00/model_optim_rng.pt"), 
                     map_location=torch.device('cpu'))
     # print(checkpoint)
+
+    # Print out args of the base ckpt.
+    print(checkpoint['args'])
 
     # # Access the state dictionary
     model_state_dict = checkpoint['model']
@@ -153,38 +233,20 @@ if __name__ == "__main__":
     # Load provided MG ckpt.
 
     args.load = base_mcore_ckpt_path
-    _ = load_checkpoint(mg_model, None, None)
+    _ = load_checkpoint(mg_model_list, None, None)
 
-    assert len(mg_model) == 1, "Above condition should have caught this"
-    mg_model = mg_model[0].eval()
-    mg_tokenizer = get_tokenizer()
+    assert len(mg_model_list) == 1, "Above condition should have caught this"
+    mg_model = mg_model_list[0].eval()
 
-    ######################################################
-    # verify logits, responses.
+    #######################################################
+    # verify logits h2h
 
-    prompts = ["Fun fact:"]
-
-    # Check if GPU is available
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    print(f"Using device: {device}")
-
-    hf_model = hf_model.to(device)
-    print(hf_model)
-
-    # Extract logits (1)
-    inputs = hf_tok(prompts[0], return_tensors="pt").to(device)
-    with torch.no_grad():
-        output = hf_model(**inputs)
-    
-    print("inputs:{}".format(inputs))
-    print("output.logits:{}".format(output.logits))
-
-    # Extract logits (2)
-    hf_model.eval()
-    hf_prompt0_tokens = hf_tok.encode(prompts[0], return_tensors='pt').cuda()
-    hf_prompt0_logits = hf_model(hf_prompt0_tokens).logits
-    print("hf_prompt0_tokens:{}".format(hf_prompt0_tokens))
-    print("hf_prompt0_logits:{}".format(hf_prompt0_logits))
+    verify_logits(
+        hf_model=hf_model, 
+        hf_tokenizer=hf_tok,
+        mg_model=mg_model,
+        verify=True
+    )
 
     #######################################################
     # Generation based.
