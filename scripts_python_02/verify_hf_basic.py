@@ -165,44 +165,6 @@ if __name__ == "__main__":
     args = get_args()
     pprint(vars(args))
 
-    ########################################################
-    # Load HF model.
-    
-    hf_path = "/mnt/syntheticpipelinetrainerv1/mcore_posttrain_v1/ckpts_base/mistral_ckpts/Mistral-7B-v0.1"
-    hf_tok = AutoTokenizer.from_pretrained(hf_path)
-    hf_model = AutoModelForCausalLM.from_pretrained(hf_path, trust_remote_code=True)
-
-    # Check if GPU is available
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    print(f"Using device: {device}")
-
-    hf_model = hf_model.to(device).eval()
-    print(hf_model)
-
-    # Print out the parameter names and their sizes
-    print("[hf_model] Parameters and their sizes:")
-    for name, param in hf_model.named_parameters():
-        print(f"{name}: {param.size()}")
-
-    #########################################################
-    # Initialize MG ckpt.
-
-    mg_model_list = get_model(model_provider, wrap_with_ddp=False)
-
-    # Print out args of the init ckpt.
-    # TODO (agoswami)
-
-    # MG Print out the parameter names and their sizes
-    for name, param in mg_model_list[0].named_parameters():
-        print(f"{name}: {param.size()}")
-
-    verify_logits( 
-        hf_model=hf_model, 
-        hf_tokenizer=hf_tok,
-        mg_model=mg_model_list[0],
-        verify=False
-    )
-
     #########################################################
     # Inspect provided MG ckpt.
 
@@ -230,7 +192,46 @@ if __name__ == "__main__":
             pass
 
     ########################################################
-    # Load provided MG ckpt.
+    # create_huggingface_model
+    
+    hf_path = "/mnt/syntheticpipelinetrainerv1/mcore_posttrain_v1/ckpts_base/mistral_ckpts/Mistral-7B-v0.1"
+    hf_tok = AutoTokenizer.from_pretrained(hf_path)
+    hf_model = AutoModelForCausalLM.from_pretrained(hf_path, trust_remote_code=True)
+
+    # Check if GPU is available
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    print(f"Using device: {device}")
+
+    hf_model = hf_model.to(device).eval()
+    print(hf_model)
+
+    # Print out the parameter names and their sizes
+    print("[hf_model] Parameters and their sizes:")
+    for name, param in hf_model.named_parameters():
+        print(f"{name}: {param.size()}")
+
+
+    #########################################################
+    # create_megatron_model
+
+    mg_model_list = get_model(model_provider, wrap_with_ddp=False)
+
+    # Print out args of the init ckpt.
+    # TODO (agoswami)
+
+    # MG Print out the parameter names and their sizes
+    for name, param in mg_model_list[0].named_parameters():
+        print(f"{name}: {param.size()}")
+
+    verify_logits( 
+        hf_model=hf_model, 
+        hf_tokenizer=hf_tok,
+        mg_model=mg_model_list[0],
+        verify=False
+    )
+
+    ########################################################
+    # load_megatron_model
 
     args.load = base_mcore_ckpt_path
     _ = load_checkpoint(mg_model_list, None, None)
@@ -239,7 +240,7 @@ if __name__ == "__main__":
     mg_model = mg_model_list[0].eval()
 
     #######################################################
-    # verify logits h2h
+    # verify_logits
 
     verify_logits(
         hf_model=hf_model, 
